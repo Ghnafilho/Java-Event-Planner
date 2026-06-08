@@ -46,7 +46,7 @@ public class EventController{
         }
         public RecurringEvent createRecurringEvent(String title, LocalDateTime dateTime,
                 String location, String description, String category,
-                int reminderMinutes, RecurringEvent.RecurrenceType recurrenceType)
+                int reminderMinutes, RecurringEvent.RecurrenceType recurrenceType, int repeat)
                 throws InvalidEventException {
 
             validateEventFields(title, dateTime, category);
@@ -61,9 +61,9 @@ public class EventController{
 
             // Gera as repetições futuras
             int repeticoes = switch (recurrenceType) {
-                case DAILY   -> 30;   // 30 dias
-                case WEEKLY  -> 12;   // 12 semanas
-                case MONTHLY -> 12;   // 12 meses
+                case DAILY   -> repeat -1;   
+                case WEEKLY  -> repeat -1;   
+                case MONTHLY -> repeat -1;   
                 default      -> 0;
             };
 
@@ -82,7 +82,7 @@ public class EventController{
             storage.saveEvents(events);
             return event;
         }
-        public void updateEvent(Event event, String title, LocalDateTime dateTime,
+    public void updateEvent(Event event, String title, LocalDateTime dateTime,
             String location, String description, String category, int reminderMinutes)
             throws InvalidEventException {
 

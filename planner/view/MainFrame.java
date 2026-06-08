@@ -256,6 +256,8 @@ public class MainFrame extends JFrame {
                 "Reunião", "Aniversário", "Consulta", "Lembrete", "Outro"});
         JSpinner spinnerLembrete = new JSpinner(
                 new SpinnerNumberModel(30, 0, 10080, 10));
+        JSpinner spinnerRepeticoes = new JSpinner(new SpinnerNumberModel(1, 1, 365, 1));
+
         JComboBox<String> comboRec = new JComboBox<>(new String[]{
                 "Sem recorrência", "Diária", "Semanal", "Mensal"});
 
@@ -280,6 +282,7 @@ public class MainFrame extends JFrame {
         painel.add(new JLabel("Categoria:*"));    painel.add(comboCat);
         painel.add(new JLabel("Lembrete (min):")); painel.add(spinnerLembrete);
         painel.add(new JLabel("Recorrência:"));   painel.add(comboRec);
+        painel.add(new JLabel("Repetições (escolha entre 1 e 365):"));     painel.add(spinnerRepeticoes);
         painel.add(new JLabel("Descrição:"));     painel.add(new JScrollPane(campoDesc));
 
 
@@ -304,6 +307,7 @@ public class MainFrame extends JFrame {
             String categoria = (String) comboCat.getSelectedItem();
             int lembrete     = (int) spinnerLembrete.getValue();
             String recStr    = (String) comboRec.getSelectedItem();
+            int repeticoes = (int) spinnerRepeticoes.getValue();
 
 
             if (eventoExistente == null) {
@@ -317,7 +321,7 @@ public class MainFrame extends JFrame {
                         case "Mensal"   -> RecurringEvent.RecurrenceType.MONTHLY;
                         default         -> RecurringEvent.RecurrenceType.NONE;
                     };
-                    controller.createRecurringEvent(titulo, dt, local, desc, categoria, lembrete, tipo);
+                    controller.createRecurringEvent(titulo, dt, local, desc, categoria, lembrete, tipo, repeticoes);
                 }
             } else {
                 // EDITAR
