@@ -111,7 +111,7 @@ public class MainFrame extends JFrame {
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                 calendarPanel, painelDireita);
-        split.setDividerLocation(320);
+        split.setDividerLocation(360);
         split.setResizeWeight(0.4);
         return split;
     }
@@ -138,14 +138,14 @@ public class MainFrame extends JFrame {
 
 
         // Área de detalhes
-        areaDetalhes = new JTextArea(6, 0);
+        areaDetalhes = new JTextArea(6, 40);
         areaDetalhes.setEditable(false);
         areaDetalhes.setFont(new Font("Monospaced", Font.PLAIN, 12));
         JScrollPane scrollDetalhes = new JScrollPane(areaDetalhes);
 
 
         // Botões de ação
-        JPanel botoes = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel botoes = new JPanel(new BorderLayout());
         JButton btnEditar  = new JButton("✏ Editar");
         JButton btnDeletar = new JButton("🗑 Deletar");
         JButton btnAddAtt  = new JButton("👤 Participante");
@@ -156,16 +156,17 @@ public class MainFrame extends JFrame {
         btnAddAtt .addActionListener(e -> adicionarParticipante());
 
 
-        botoes.add(btnEditar);
-        botoes.add(btnDeletar);
-        botoes.add(btnAddAtt);
+        botoes.add(btnEditar,BorderLayout.NORTH);
+        botoes.add(btnDeletar,BorderLayout.CENTER);
+        botoes.add(btnAddAtt,BorderLayout.SOUTH);
 
 
         painel.add(new JLabel("Eventos do dia:"), BorderLayout.NORTH);
         painel.add(scrollLista,   BorderLayout.CENTER);
-        painel.add(scrollDetalhes, BorderLayout.SOUTH);
-        painel.add(botoes,        BorderLayout.SOUTH); // ajuste de layout conforme necessário
-
+        JPanel scrollBotoes = new JPanel();
+        scrollBotoes.add(scrollDetalhes, BorderLayout.CENTER);
+        scrollBotoes.add(botoes,BorderLayout.EAST);
+        painel.add(scrollBotoes, BorderLayout.SOUTH); 
 
         return painel;
     }
@@ -195,8 +196,6 @@ public class MainFrame extends JFrame {
         sb.append("Categoria:  ").append(event.getCategory()).append("\n");
         sb.append("Descrição:  ").append(event.getDescription()).append("\n");
         sb.append("Lembrete:   ").append(event.getReminderMinutesBefore()).append(" min antes\n");
-
-
         if (event instanceof RecurringEvent) {
             sb.append("Recorrência: ")
               .append(((RecurringEvent) event).getRecurrenceType()).append("\n");
