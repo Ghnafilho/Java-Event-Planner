@@ -1,4 +1,3 @@
-Minha festa;2026-06-08T15:15:00;;;Aniversário;30;;[REC:DAILY]
-Minha festa;2026-06-09T15:15:00;;;Aniversário;30;;[REC:DAILY]
-Minha festa;2026-06-10T15:15:00;;;Aniversário;30;;[REC:DAILY]
-Minha festa;2026-06-11T15:15:00;;;Aniversário;30;;[REC:DAILY]
+Minha festa;2026-06-08T15:15:00;ICMC;;Aniversário;30;Pedro|PRD@gmail.com;[REC:DAILY]
+Minha festa;2026-06-09T15:15:00;ICMC;;Aniversário;30;;[REC:DAILY]
+Minha festa;2026-06-10T15:15:00;ICMC;;Aniversário;30;;[REC:DAILY]

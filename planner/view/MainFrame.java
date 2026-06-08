@@ -113,7 +113,7 @@ public class MainFrame extends JFrame {
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                 calendarPanel, painelDireita);
-        split.setDividerLocation(360);
+        split.setDividerLocation(500);
         split.setResizeWeight(0.4);
         return split;
     }
@@ -140,17 +140,26 @@ public class MainFrame extends JFrame {
 
 
         // Área de detalhes
-        areaDetalhes = new JTextArea(6, 40);
+        areaDetalhes = new JTextArea(6, 35);
         areaDetalhes.setEditable(false);
         areaDetalhes.setFont(new Font("Monospaced", Font.PLAIN, 12));
         JScrollPane scrollDetalhes = new JScrollPane(areaDetalhes);
 
 
         // Botões de ação
-        JPanel botoes = new JPanel(new BorderLayout());
+        JPanel botoes = new JPanel();
+        botoes.setLayout((new BoxLayout(botoes, BoxLayout.Y_AXIS)));
         JButton btnEditar  = new JButton("✏ Editar");
         JButton btnDeletar = new JButton("🗑 Deletar");
         JButton btnAddAtt  = new JButton("👤 Participante");
+        btnEditar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnDeletar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnAddAtt.setAlignmentX(Component.CENTER_ALIGNMENT);
+        Dimension tamanho = new Dimension(160, 35);
+
+        btnEditar.setMaximumSize(tamanho);
+        btnDeletar.setMaximumSize(tamanho);
+        btnAddAtt.setMaximumSize(tamanho);
 
 
         btnEditar .addActionListener(e -> editarEventoSelecionado());
@@ -158,14 +167,17 @@ public class MainFrame extends JFrame {
         btnAddAtt .addActionListener(e -> adicionarParticipante());
 
 
-        botoes.add(btnEditar,BorderLayout.NORTH);
-        botoes.add(btnDeletar,BorderLayout.CENTER);
-        botoes.add(btnAddAtt,BorderLayout.SOUTH);
+        botoes.add(btnEditar);
+        botoes.add(Box.createVerticalStrut(10));
+        botoes.add(btnDeletar);
+        botoes.add(Box.createVerticalStrut(10));
+        botoes.add(btnAddAtt);
+        botoes.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
 
 
         painel.add(new JLabel("Eventos do dia:"), BorderLayout.NORTH);
         painel.add(scrollLista,   BorderLayout.CENTER);
-        JPanel scrollBotoes = new JPanel();
+        JPanel scrollBotoes = new JPanel(new BorderLayout());
         scrollBotoes.add(scrollDetalhes, BorderLayout.CENTER);
         scrollBotoes.add(botoes,BorderLayout.EAST);
         painel.add(scrollBotoes, BorderLayout.SOUTH); 
