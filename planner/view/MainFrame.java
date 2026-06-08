@@ -6,6 +6,8 @@ import planner.exception.InvalidEventException;
 import planner.model.*;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -234,6 +236,20 @@ public class MainFrame extends JFrame {
         // Campos do formulário
         JTextField campoTitulo   = new JTextField(20);
         JTextField campoData     = new JTextField("dd/MM/yyyy HH:mm", 20);
+        campoData.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e){
+                if(campoData.getText().equals("dd/MM/yyyy HH:mm")){
+                    campoData.setText("");
+                } 
+            }
+            @Override
+            public void focusLost(FocusEvent e){
+                if(campoData.getText().isEmpty()){
+                    campoData.setText("Day/Month/Year Hour:Minutes");
+                }
+            }
+        });
         JTextField campoLocal    = new JTextField(20);
         JTextArea  campoDesc     = new JTextArea(3, 20);
         JComboBox<String> comboCat = new JComboBox<>(new String[]{
