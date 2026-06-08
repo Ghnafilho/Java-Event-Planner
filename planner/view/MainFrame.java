@@ -321,7 +321,23 @@ public class MainFrame extends JFrame {
                 }
             } else {
                 // EDITAR
-                controller.updateEvent(eventoExistente, titulo, dt, local, desc, categoria, lembrete);
+                if (eventoExistente instanceof RecurringEvent rec) {
+                    String[] opcoes = {"Só esta ocorrência", "Esta e todas as futuras", "Cancelar"};
+                    int escolha = JOptionPane.showOptionDialog(this,
+                            "Este é um evento recorrente. O que deseja editar?",
+                            "Editar evento recorrente",
+                            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                            null, opcoes, opcoes[0]);
+
+                    if (escolha == 0) {
+                        controller.updateEvent(rec, titulo, dt, local, desc, categoria, lembrete);
+                    } else if (escolha == 1) {
+                        controller.updateFutureOccurrences(rec, titulo, dt, local, desc, categoria, lembrete);
+                    }
+                    // escolha == 2: não faz nada
+                } else {
+                    controller.updateEvent(eventoExistente, titulo, dt, local, desc, categoria, lembrete);
+                }
             }
 
 

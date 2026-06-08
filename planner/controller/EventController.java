@@ -101,6 +101,31 @@ public class EventController{
 
         storage.saveEvents(events); // salva as mudanças
     }
+    
+    public void updateFutureOccurrences(RecurringEvent event, String title,
+            LocalDateTime dateTime, String location, String description,
+            String category, int reminderMinutes) throws InvalidEventException {
+
+        validateEventFields(title, dateTime, category);
+
+        // Diferença de tempo entre a data nova e a antiga (para manter o offset nas repetições)
+        long diferencaMinutos = java.time.Duration.between(event.getDateTime(), dateTime).toMinutes();
+
+        events.stream()
+            .filter(e -> e instanceof RecurringEvent
+                    && e.getTitle().equals(event.getTitle())
+                    && !e.getDateTime().isBefore(event.getDateTime()))
+            .forEach(e -> {
+                e.setTitle(title);
+                e.setDateTime(e.getDateTime().plusMinutes(diferencaMinutos));
+                e.setLocation(location);
+                e.setDescription(description);
+                e.setCategory(category);
+                e.setReminderMinutesBefore(reminderMinutes);
+            });
+
+        storage.saveEvents(events);
+    }
     public void deleteEvent(Event event) {
         events.remove(event);
         storage.saveEvents(events);
