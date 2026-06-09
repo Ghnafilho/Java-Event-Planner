@@ -240,7 +240,106 @@ public class MainFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Selecione um evento para editar.");
             return;
         }
-        abrirFormulario(selecionado);
+        abrirFormularioEditavel(selecionado);
+    }
+
+    private void abrirFormularioEditavel(Event eventoExistente) {
+        // Campos do formulário
+        JTextField campoTitulo   = new JTextField(20);
+        JTextField campoData     = new JTextField("Day/Month/Year Hour:Minutes", 20);
+        campoData.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e){
+                if(campoData.getText().equals("Day/Month/Year Hour:Minutes")){
+                    campoData.setText("");
+                } 
+            }
+            @Override
+            public void focusLost(FocusEvent e){
+                if(campoData.getText().isEmpty()){
+                    campoData.setText("Day/Month/Year Hour:Minutes");
+                }
+            }
+        });
+        JTextField campoLocal    = new JTextField(20);
+        JTextArea  campoDesc     = new JTextArea(3, 20);
+        JComboBox<String> comboCat = new JComboBox<>(new String[]{
+                "Reunião", "Aniversário", "Consulta", "Lembrete", "Outro"});
+        JSpinner spinnerLembrete = new JSpinner(
+                new SpinnerNumberModel(30, 0, 10080, 10));
+
+        // Preenche se for edição
+        if (eventoExistente != null) {
+            campoTitulo.setText(eventoExistente.getTitle());
+            campoData.setText(eventoExistente.getDateTime()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+            campoLocal.setText(eventoExistente.getLocation());
+            campoDesc.setText(eventoExistente.getDescription());
+            spinnerLembrete.setValue(eventoExistente.getReminderMinutesBefore());
+        }
+
+
+        // Monta o painel do diálogo
+        JPanel painel = new JPanel(new GridLayout(0, 2, 6, 6));
+        painel.add(new JLabel("Título:*"));       painel.add(campoTitulo);
+        painel.add(new JLabel("Data/Hora:*"));    painel.add(campoData);
+        painel.add(new JLabel("Local:"));         painel.add(campoLocal);
+        painel.add(new JLabel("Categoria:*"));    painel.add(comboCat);
+        painel.add(new JLabel("Lembrete (min):")); painel.add(spinnerLembrete);
+        painel.add(new JLabel("Descrição:"));     painel.add(new JScrollPane(campoDesc));
+
+
+        int resultado = JOptionPane.showConfirmDialog(this, painel,
+                eventoExistente == null ? "Novo Evento" : "Editar Evento",
+                JOptionPane.OK_CANCEL_OPTION);
+
+
+        if (resultado != JOptionPane.OK_OPTION) { return; }
+
+
+        try {
+            // Parseia a data digitada
+            java.time.format.DateTimeFormatter fmt =
+                    java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            LocalDateTime dt = LocalDateTime.parse(campoData.getText().trim(), fmt);
+
+
+            String titulo    = campoTitulo.getText().trim();
+            String local     = campoLocal.getText().trim();
+            String desc      = campoDesc.getText().trim();
+            String categoria = (String) comboCat.getSelectedItem();
+            int lembrete     = (int) spinnerLembrete.getValue();
+                // EDITAR
+            if (eventoExistente instanceof RecurringEvent rec) {
+                String[] opcoes = {"Só esta ocorrência", "Esta e todas as futuras", "Cancelar"};
+                int escolha = JOptionPane.showOptionDialog(this,
+                        "Este é um evento recorrente. O que deseja editar?",
+                        "Editar evento recorrente",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                        null, opcoes, opcoes[0]);
+
+                if (escolha == 0) {
+                    controller.updateEvent(rec, titulo, dt, local, desc, categoria, lembrete);
+                } else if (escolha == 1) {
+                    controller.updateFutureOccurrences(rec, titulo, dt, local, desc, categoria, lembrete);
+                }
+                // escolha == 2: não faz nada
+            } else {
+                controller.updateEvent(eventoExistente, titulo, dt, local, desc, categoria, lembrete);
+            }
+        calendarPanel.refresh();
+        atualizarListaEventos(dataSelecionada);
+
+
+        } catch (java.time.format.DateTimeParseException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Data inválida! Use o formato: dd/MM/yyyy HH:mm",
+                    "Erro de validação", JOptionPane.ERROR_MESSAGE);
+        } catch (InvalidEventException ex) {
+            JOptionPane.showMessageDialog(this,
+                    ex.getMessage(),
+                    "Erro de validação", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
 

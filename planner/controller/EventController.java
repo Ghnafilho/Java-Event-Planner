@@ -108,12 +108,15 @@ public class EventController{
 
         validateEventFields(title, dateTime, category);
 
-        // Diferença de tempo entre a data nova e a antiga (para manter o offset nas repetições)
-        long diferencaMinutos = java.time.Duration.between(event.getDateTime(), dateTime).toMinutes();
+        String tituloAntigo = event.getTitle();
+
+        long diferencaMinutos = java.time.Duration
+                .between(event.getDateTime(), dateTime)
+                .toMinutes();
 
         events.stream()
             .filter(e -> e instanceof RecurringEvent
-                    && e.getTitle().equals(event.getTitle())
+                    && e.getTitle().equals(tituloAntigo)
                     && !e.getDateTime().isBefore(event.getDateTime()))
             .forEach(e -> {
                 e.setTitle(title);
@@ -124,7 +127,7 @@ public class EventController{
                 e.setReminderMinutesBefore(reminderMinutes);
             });
 
-        storage.saveEvents(events);
+        storage.saveEvents(events); 
     }
     public void deleteEvent(Event event) {
         events.remove(event);
