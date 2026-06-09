@@ -1,3 +1,5 @@
 Minha festa;2026-06-08T15:15:00;ICMC;;Reunião;30;Pedro|PRD@gmail.com,qwerfqerfqrf|qwrefqrfq@gmail.com,qwefqwefwqef1|qwefqwefqwef1@gmail.com;[REC:DAILY]
-Minha festa;2026-06-09T15:15:00;ICMC;;Reunião;30;qwefqwefwqef1|qwefqwefqwef1@gmail.com;[REC:DAILY]
-Minha festa;2026-06-10T15:15:00;ICMC;;Reunião;30;qwefqwefwqef1|qwefqwefqwef1@gmail.com;[REC:DAILY]
+Aula;2026-06-09T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY]
+Aula;2026-06-16T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY]
+Aula;2026-06-23T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY]
+Aula;2026-06-30T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY]
