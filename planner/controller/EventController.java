@@ -163,16 +163,42 @@ public class EventController{
                 .collect(Collectors.toList());
     }
     public void addAttendee(Event event, String name, String email)
-        throws InvalidEventException {
-
+            throws InvalidEventException {
 
         if (name == null || name.trim().isEmpty()) {
             throw new InvalidEventException("Nome do participante não pode ser vazio.");
         }
+
         if (email == null || !email.contains("@")) {
             throw new InvalidEventException("E-mail inválido.");
         }
+
         event.addAttendee(new Attendee(name.trim(), email.trim()));
+        storage.saveEvents(events);
+    }
+
+    public void addAttendeeToFutureOccurrences(
+            RecurringEvent event,
+            String nome,
+            String email)
+            throws InvalidEventException {
+
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new InvalidEventException("Nome do participante não pode ser vazio.");
+        }
+
+        if (email == null || !email.contains("@")) {
+            throw new InvalidEventException("E-mail inválido.");
+        }
+
+        Attendee novo = new Attendee(nome.trim(), email.trim());
+
+        events.stream()
+            .filter(e -> e instanceof RecurringEvent
+                    && e.getTitle().equals(event.getTitle())
+                    && !e.getDateTime().isBefore(event.getDateTime()))
+            .forEach(e -> e.addAttendee(novo));
+
         storage.saveEvents(events);
     }
     public void exportDayToFile(LocalDate date, String filePath) throws java.io.IOException {

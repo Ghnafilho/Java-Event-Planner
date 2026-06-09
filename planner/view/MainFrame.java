@@ -247,11 +247,11 @@ public class MainFrame extends JFrame {
     private void abrirFormulario(Event eventoExistente) {
         // Campos do formulário
         JTextField campoTitulo   = new JTextField(20);
-        JTextField campoData     = new JTextField("dd/MM/yyyy HH:mm", 20);
+        JTextField campoData     = new JTextField("Day/Month/Year Hour:Minutes", 20);
         campoData.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e){
-                if(campoData.getText().equals("dd/MM/yyyy HH:mm")){
+                if(campoData.getText().equals("Day/Month/Year Hour:Minutes")){
                     campoData.setText("");
                 } 
             }
@@ -441,9 +441,43 @@ public class MainFrame extends JFrame {
 
         if (resultado == JOptionPane.OK_OPTION) {
             try {
-                controller.addAttendee(selecionado,
-                        campoNome.getText(), campoEmail.getText());
-                exibirDetalhes(selecionado); // atualiza os detalhes
+                String nome  = campoNome.getText();
+                String email = campoEmail.getText();
+
+                if (selecionado instanceof RecurringEvent rec) {
+
+                    String[] opcoes = {
+                        "Só este evento",
+                        "Este e todos os futuros",
+                        "Cancelar"
+                    };
+
+                    int escolha = JOptionPane.showOptionDialog(this,
+                            "Este é um evento recorrente. Onde deseja adicionar o participante?",
+                            "Evento recorrente",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            opcoes,
+                            opcoes[0]);
+
+                    if (escolha == 0) {
+                        // só este
+                        controller.addAttendee(rec, nome, email);
+
+                    } else if (escolha == 1) {
+                        // todos os futuros 
+                        controller.addAttendeeToFutureOccurrences(rec, nome, email);
+                    }
+
+
+                } else {
+                    // evento normal
+                    controller.addAttendee(selecionado, nome, email);
+                }
+
+                exibirDetalhes(selecionado);
+
             } catch (InvalidEventException ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(),
                         "Erro", JOptionPane.ERROR_MESSAGE);

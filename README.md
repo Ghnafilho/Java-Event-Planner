@@ -5,8 +5,6 @@ Projeto acadêmico da disciplina de **Programação Orientada a Objetos**.
 
 ---
 
----
-
 ## Funcionalidades
 
 - Visualização mensal do calendário com dias destacados quando há eventos
