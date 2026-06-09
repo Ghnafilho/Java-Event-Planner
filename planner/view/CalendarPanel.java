@@ -149,7 +149,7 @@ public class CalendarPanel extends JPanel {
         // Create the title label showing current month and year
         // Uses Portuguese locale for month name display
         String monthName = currentMonth.getMonth()
-                .getDisplayName(TextStyle.FULL, new Locale("pt", "BR"));
+                .getDisplayName(TextStyle.FULL, Locale.of("pt", "BR"));
         JLabel title = new JLabel(
                 monthName.substring(0, 1).toUpperCase() + monthName.substring(1)
                         + " " + currentMonth.getYear(),
