@@ -1,79 +1,82 @@
 # Java Event Planner
 
-Aplicação desktop de gerenciamento de eventos e calendário, desenvolvida em Java com Swing.  
-Projeto acadêmico da disciplina de **Programação Orientada a Objetos**.
+A desktop application for event and calendar management, developed in Java using Swing.
+Academic project for the **Object-Oriented Programming** course.
 
 ---
 
-## Funcionalidades
+## Features
 
-- Visualização mensal do calendário com dias destacados quando há eventos
-- Criação, edição e exclusão de eventos
-- Suporte a eventos recorrentes (diário, semanal e mensal)
-- Ao editar ou excluir um recorrente, escolha entre alterar só aquela ocorrência ou todas as futuras
-- Lembretes automáticos via pop-up enquanto o programa está aberto
-- Adição de participantes (nome e e-mail) a cada evento
-- Busca de eventos por palavra-chave
-- Exportação dos eventos de um dia para arquivo `.txt`
-- Persistência automática em arquivo local — os dados são carregados ao abrir o programa
-- Tratamento de erros com mensagens claras, sem expor stack traces ao usuário
+* Monthly calendar view with highlighted days containing events
+* Create, edit, and delete events
+* Support for recurring events (daily, weekly, and monthly)
+* When editing or deleting a recurring event, choose between modifying only that occurrence or all future occurrences
+* Automatic reminder pop-ups while the application is running
+* Add attendees (name and email) to each event
+* Search events by keyword
+* Export all events from a specific day to a `.txt` file
+* Automatic local file persistence — data is loaded when the application starts
+* Error handling with clear messages, without exposing stack traces to the user
 
 ---
 
-## Estrutura do Projeto
+## Project Structure
 
-```
+```text
 planner/
-├── Main.java                        # Ponto de entrada da aplicação
+├── Main.java                        # Application entry point
 ├── controller/
-│   ├── EventController.java         # Lógica de negócio (CRUD, busca, exportação)
-│   └── ReminderThread.java          # Thread de lembretes em segundo plano
+│   ├── EventController.java         # Business logic (CRUD, search, export)
+│   └── ReminderThread.java          # Background reminder thread
 ├── model/
-│   ├── Event.java                   # Modelo base de evento
-│   ├── RecurringEvent.java          # Evento recorrente (herda de Event)
-│   ├── Attendee.java                # Participante do evento
-│   └── DataStorage.java             # Leitura e escrita em arquivo
+│   ├── Event.java                   # Base event model
+│   ├── RecurringEvent.java          # Recurring event (inherits from Event)
+│   ├── Attendee.java                # Event attendee
+│   └── DataStorage.java             # File reading and writing
 ├── view/
-│   ├── MainFrame.java               # Janela principal
-│   └── CalendarPanel.java           # Grade visual do calendário
+│   ├── MainFrame.java               # Main application window
+│   └── CalendarPanel.java           # Calendar visual grid
 └── exception/
-    └── InvalidEventException.java   # Exceção customizada de validação
+    └── InvalidEventException.java   # Custom validation exception
 ```
 
 ---
 
-## Conceitos de POO Aplicados
+## Object-Oriented Programming Concepts Applied
 
-| Conceito | Onde é aplicado |
-|---|---|
-| **Herança** | `RecurringEvent` estende `Event` |
-| **Polimorfismo** | `toCSV()` sobrescrito em `RecurringEvent` |
-| **Encapsulamento** | Atributos privados com getters/setters em todas as classes |
-| **Composição** | `Event` contém uma lista de `Attendee` |
-| **Exceção customizada** | `InvalidEventException` para validação de entradas |
-| **Thread** | `ReminderThread` como daemon thread em paralelo |
-| **Enum** | `RecurrenceType` para tipos de recorrência |
+| Concept              | Where it is Applied                                    |
+| -------------------- | ------------------------------------------------------ |
+| **Inheritance**      | `RecurringEvent` extends `Event`                       |
+| **Polymorphism**     | `toCSV()` overridden in `RecurringEvent`               |
+| **Encapsulation**    | Private attributes with getters/setters in all classes |
+| **Composition**      | `Event` contains a list of `Attendee` objects          |
+| **Custom Exception** | `InvalidEventException` for input validation           |
+| **Threading**        | `ReminderThread` runs as a daemon thread in parallel   |
+| **Enum**             | `RecurrenceType` for recurrence types                  |
 
 ---
 
-## Como Compilar e Rodar
+## How to Compile and Run
 
-### Pré-requisito
-- Java 17 ou superior instalado
+### Prerequisite
 
-### No Linux/macOS
+* Java 17 or later installed
+
+### Linux/macOS
+
 ```bash
-# Criar pasta de saída
+# Create output directory
 mkdir out
 
-# Compilar
+# Compile
 javac -d out $(find planner -name "*.java")
 
-# Rodar
+# Run
 java -cp out planner.Main
 ```
 
-### No Windows (CMD)
+### Windows (CMD)
+
 ```cmd
 mkdir out
 
@@ -84,22 +87,24 @@ java -cp out planner.Main
 
 ---
 
-## Persistência de Dados
+## Data Persistence
 
-Os eventos são salvos automaticamente no arquivo `events_data.txt` na pasta raiz do projeto.  
-O arquivo é carregado ao iniciar o programa. Caso esteja ausente ou corrompido, o programa inicia normalmente com a lista vazia.
+Events are automatically saved to the `events_data.txt` file located in the project's root directory.
+
+The file is loaded when the application starts. If it is missing or corrupted, the application will start normally with an empty event list.
 
 ---
 
-## Arquivo de Dados — Formato
+## Data File Format
 
-Cada linha representa um evento no formato:
+Each line represents an event using the following format:
 
-```
-título;dataHora;local;descrição;categoria;lembreteMinutos;participantes
+```text
+title;dateTime;location;description;category;reminderMinutes;attendees
 ```
 
-Eventos recorrentes têm um sufixo adicional:
-```
+Recurring events include an additional suffix:
+
+```text
 ...;[REC:DAILY]
 ```
