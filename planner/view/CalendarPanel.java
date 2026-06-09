@@ -60,6 +60,21 @@ public class CalendarPanel extends JPanel {
         setLayout(new BorderLayout());
         buildPanel();
     }
+    /**
+     * This function will recive a category of any event, and return the color 
+     * that have to be displayed on screen in the event day
+     * @param category
+     * @return the color that will be used to display the event on screen
+     */
+    private Color getEventColor(String category) {
+        switch (category) {
+            case "Meeting":     return new Color(59, 130, 246);  // azul
+            case "Birthday": return new Color(234, 179, 8);   // amarelo
+            case "Appointment":    return new Color(34, 197, 94);   // verde
+            case "Reminder":    return new Color(249, 115, 22);  // laranja
+            default:            return new Color(168, 85, 247);  // roxo (Outro)
+        }
+    }
 
     /**
      * Sets the callback function that gets invoked when a date is clicked.
@@ -267,9 +282,14 @@ public class CalendarPanel extends JPanel {
                 @Override
                 protected void paintComponent(Graphics g) {
                     super.paintComponent(g);
-                    // Draw a small red circle to indicate events exist on this date
-                    g.setColor(new Color(220, 38, 38));
-                    g.fillOval(getWidth() / 2 - 3, 1, 6, 6);
+                    // Draw a small colored circle to indicate events exist on this date
+                    List<planner.model.Event> evs = controller.getEventsForDate(date);
+                    int x = 2;
+                    for (planner.model.Event ev : evs) {
+                        g.setColor(getEventColor(ev.getCategory()));
+                        g.fillOval(x, getHeight() - 6, 5, 5);
+                        x += 7; // create a space between the event dot
+                    }
                 }
             };
             eventIndicator.setOpaque(false);
