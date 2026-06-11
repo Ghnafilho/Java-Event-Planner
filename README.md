@@ -23,21 +23,24 @@ Academic project for the **Object-Oriented Programming** course.
 ## Project Structure
 
 ```text
-planner/
-├── Main.java                        # Application entry point
-├── controller/
-│   ├── EventController.java         # Business logic (CRUD, search, export)
-│   └── ReminderThread.java          # Background reminder thread
-├── model/
-│   ├── Event.java                   # Base event model
-│   ├── RecurringEvent.java          # Recurring event (inherits from Event)
-│   ├── Attendee.java                # Event attendee
-│   └── DataStorage.java             # File reading and writing
-├── view/
-│   ├── MainFrame.java               # Main application window
-│   └── CalendarPanel.java           # Calendar visual grid
-└── exception/
-    └── InvalidEventException.java   # Custom validation exception
+.
+├── run.bat                             # Windows compile/run helper script
+├── planner/
+│   ├── Main.java                       # Application entry point
+│   ├── controller/
+│   │   ├── EventController.java        # Business logic (CRUD, search, export)
+│   │   └── ReminderThread.java         # Background reminder thread
+│   ├── model/
+│   │   ├── Event.java                  # Base event model
+│   │   ├── RecurringEvent.java         # Recurring event (inherits from Event)
+│   │   ├── Attendee.java               # Event attendee
+│   │   └── DataStorage.java            # File reading and writing
+│   ├── view/
+│   │   ├── MainFrame.java              # Main application window
+│   │   └── CalendarPanel.java          # Calendar visual grid
+│   └── exception/
+│       └── InvalidEventException.java  # Custom validation exception
+
 ```
 
 ---
@@ -62,6 +65,24 @@ planner/
 
 * Java 17 or later installed
 
+### Windows
+
+The project includes a helper script that automatically compiles and runs the application.
+
+Run:
+
+```cmd
+run.bat
+```
+
+Or simply double-click the file in Windows Explorer.
+
+The script automatically:
+
+1. Removes previous compiled files
+2. Compiles all source files into the `out` directory
+3. Launches the application
+
 ### Linux/macOS
 
 ```bash
@@ -74,17 +95,6 @@ javac -d out $(find planner -name "*.java")
 # Run
 java -cp out planner.Main
 ```
-
-### Windows (CMD)
-
-```cmd
-mkdir out
-
-javac -d out planner\Main.java planner\model\*.java planner\controller\*.java planner\exception\*.java planner\view\*.java
-
-java -cp out planner.Main
-```
-
 ---
 
 ## Data Persistence
