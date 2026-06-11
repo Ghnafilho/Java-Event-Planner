@@ -73,7 +73,7 @@ public class Event {
     }
 
 /**
- * Returns the formatted date and time for display in the Brazilian format
+ * Returns the formatted date and time for display (dd/MM/yyyy HH:mm).
  */
     public String getFormattedDateTime() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");

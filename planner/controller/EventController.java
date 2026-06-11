@@ -2,6 +2,7 @@ package planner.controller;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 import planner.exception.InvalidEventException;
 import planner.model.*;
 import java.time.LocalDateTime;
@@ -38,7 +39,12 @@ public class EventController {
      */
     public EventController() {
         this.storage = new DataStorage();
-        this.events = new ArrayList<>(storage.loadEvents());
+        List<Event> loadedEvents = storage.loadEvents();
+        this.events = new ArrayList<>(loadedEvents);
+
+        if (DataStorage.assignLegacySeriesIds(loadedEvents)) {
+            storage.saveEvents(events);
+        }
     }
 
     /**
@@ -122,12 +128,12 @@ public class EventController {
             throw new InvalidEventException("Recurrence type is invalid.");
         }
 
-        // Create the initial recurring event
+        String seriesId = UUID.randomUUID().toString();
+
         RecurringEvent event = new RecurringEvent(title, dateTime, location,
-                description, category, reminderMinutes, recurrenceType);
+                description, category, reminderMinutes, recurrenceType, seriesId);
         events.add(event);
 
-        // Calculate the number of future occurrences to generate (repeat count minus 1)
         int occurrencesToGenerate = switch (recurrenceType) {
             case DAILY -> repeat - 1;
             case WEEKLY -> repeat - 1;
@@ -135,19 +141,16 @@ public class EventController {
             default -> 0;
         };
 
-        // Generate all future occurrences
         LocalDateTime nextDateTime = dateTime;
         for (int i = 0; i < occurrencesToGenerate; i++) {
-            // Calculate the next date based on recurrence type
             nextDateTime = switch (recurrenceType) {
                 case DAILY -> nextDateTime.plusDays(1);
                 case WEEKLY -> nextDateTime.plusWeeks(1);
                 case MONTHLY -> nextDateTime.plusMonths(1);
                 default -> nextDateTime;
             };
-            // Add the new occurrence to events list
             events.add(new RecurringEvent(title, nextDateTime, location,
-                    description, category, reminderMinutes, recurrenceType));
+                    description, category, reminderMinutes, recurrenceType, seriesId));
         }
 
         // Persist all events to storage
@@ -218,20 +221,12 @@ public class EventController {
         // Validate all required fields
         validateEventFields(title, dateTime, category);
 
-        // Store the original title to identify all matching recurring events
-        String originalTitle = event.getTitle();
-
-        // Calculate the time difference between old and new dateTime in minutes
-        // This allows us to maintain consistent intervals between recurring occurrences
         long timeDifferenceMinutes = java.time.Duration
                 .between(event.getDateTime(), dateTime)
                 .toMinutes();
 
-        // Update all future occurrences of this recurring event
         events.stream()
-                .filter(e -> e instanceof RecurringEvent
-                        && e.getTitle().equals(originalTitle)
-                        && !e.getDateTime().isBefore(event.getDateTime()))
+                .filter(e -> isSameSeriesOccurrence(event, e))
                 .forEach(e -> {
                     e.setTitle(title);
                     e.setDateTime(e.getDateTime().plusMinutes(timeDifferenceMinutes));
@@ -273,12 +268,7 @@ public class EventController {
      * @param event The recurring event instance to start deleting from
      */
     public void deleteFutureOccurrences(RecurringEvent event) {
-        // Remove all occurrences that match the event title and occur at or after the given date
-        events.removeIf(e ->
-                e instanceof RecurringEvent
-                        && e.getTitle().equals(event.getTitle())
-                        && !e.getDateTime().isBefore(event.getDateTime())
-        );
+        events.removeIf(e -> isSameSeriesOccurrence(event, e));
         // Persist the change to storage
         storage.saveEvents(events);
     }
@@ -415,11 +405,8 @@ public class EventController {
         String trimmedEmail = email.trim();
 
         events.stream()
-                .filter(e -> e instanceof RecurringEvent
-                        && e.getTitle().equals(event.getTitle())
-                        && !e.getDateTime().isBefore(event.getDateTime()))
-                .forEach(e -> e.addAttendee(
-                        new Attendee(trimmedName, trimmedEmail)));
+                .filter(e -> isSameSeriesOccurrence(event, e))
+                .forEach(e -> e.addAttendee(new Attendee(trimmedName, trimmedEmail)));
 
         storage.saveEvents(events);
     }
@@ -478,6 +465,16 @@ public class EventController {
      *
      * @throws InvalidEventException If any required field is null, empty, or contains only whitespace
      */
+    private boolean isSameSeriesOccurrence(RecurringEvent reference, Event candidate) {
+        if (!(candidate instanceof RecurringEvent recurringCandidate)) {
+            return false;
+        }
+
+        return reference.getSeriesId() != null
+                && reference.getSeriesId().equals(recurringCandidate.getSeriesId())
+                && !candidate.getDateTime().isBefore(reference.getDateTime());
+    }
+
     private void validateEventFields(String title, LocalDateTime dateTime, String category)
             throws InvalidEventException {
 

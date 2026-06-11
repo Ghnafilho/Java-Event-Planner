@@ -37,7 +37,8 @@ Academic project for the **Object-Oriented Programming** course.
 │   │   └── DataStorage.java            # File reading and writing
 │   ├── view/
 │   │   ├── MainFrame.java              # Main application window
-│   │   └── CalendarPanel.java          # Calendar visual grid
+│   │   ├── CalendarPanel.java          # Calendar visual grid
+│   │   └── EventFormDialog.java        # Reusable create/edit event form
 │   └── exception/
 │       └── InvalidEventException.java  # Custom validation exception
 
@@ -113,8 +114,10 @@ Each line represents an event using the following format:
 title;dateTime;location;description;category;reminderMinutes;attendees
 ```
 
-Recurring events include an additional suffix:
+Recurring events include an additional suffix with recurrence type and series identifier:
 
 ```text
-...;[REC:DAILY]
+...;[REC:DAILY:550e8400-e29b-41d4-a716-446655440000]
 ```
+
+Legacy files without a series identifier are migrated automatically on first load.

@@ -1,7 +1,7 @@
-Minha festa;2026-06-08T15:15:00;ICMC;;Meeting;30;Pedro|PRD@gmail.com;[REC:DAILY]
-Aula;2026-06-09T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY]
-Aula;2026-06-16T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY]
-Aula;2026-06-23T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY]
-Aula;2026-06-30T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY]
+Minha festa;2026-06-08T15:15:00;ICMC;;Meeting;30;Pedro|PRD@gmail.com;[REC:DAILY:a59bb03a-0a29-4ebb-b27c-691e41d53b5f]
+Aula;2026-06-09T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY:0f99da0c-584b-4cdb-8005-fdc3e7a3e534]
+Aula;2026-06-16T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY:0f99da0c-584b-4cdb-8005-fdc3e7a3e534]
+Aula;2026-06-23T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY:0f99da0c-584b-4cdb-8005-fdc3e7a3e534]
+Aula;2026-06-30T14:20:00;Bloco 5 ICMC;Class of ED II;Other;30;;[REC:WEEKLY:0f99da0c-584b-4cdb-8005-fdc3e7a3e534]
 Davi;2026-06-16T15:15:00;;;Appointment;30;
-Aula de POO;2026-06-11T08:10:00;Sala 3010;;Meeting;30;;[REC:WEEKLY]
+Aula de POO;2026-06-11T08:10:00;Sala 3010;;Meeting;30;;[REC:WEEKLY:6a924322-cadb-4657-9c4d-bb20f548788d]

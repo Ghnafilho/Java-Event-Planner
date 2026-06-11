@@ -6,10 +6,7 @@ import planner.exception.InvalidEventException;
 import planner.model.*;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -288,110 +285,39 @@ public class MainFrame extends JFrame {
         detailsArea.setText(detailsBuilder.toString());
     }
 
-    /**
-     * Opens a form dialog to create a new event.
-     *
-     * Delegates to the main form opening method with null to indicate new event creation.
-     */
     private void openNewEventForm() {
-        openEventForm(null);
+        EventFormDialog.showCreateDialog(this).ifPresent(this::createEventFromForm);
     }
 
-    /**
-     * Opens the event form for editing the currently selected event.
-     *
-     * Shows an error message if no event is currently selected.
-     */
     private void editSelectedEvent() {
         Event selectedEvent = eventList.getSelectedValue();
         if (selectedEvent == null) {
             JOptionPane.showMessageDialog(this, "Select an event to edit.");
             return;
         }
-        openEditableEventForm(selectedEvent);
+        EventFormDialog.showEditDialog(this, selectedEvent).ifPresent(data ->
+                updateEventFromForm(selectedEvent, data));
     }
 
-    /**
-     * Opens a form dialog for editing an existing single (non-recurring) event.
-     *
-     * Allows the user to modify event details and apply changes. For recurring events,
-     * this method updates only the selected occurrence.
-     *
-     * @param existingEvent The Event object to edit
-     */
-    private void openEditableEventForm(Event existingEvent) {
-        // Create form fields with initial values
-        JTextField titleField = new JTextField(20);
-        JTextField dateTimeField = new JTextField("dd/MM/yyyy HH:mm", 20);
-        dateTimeField.addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                if (dateTimeField.getText().equals("dd/MM/yyyy HH:mm")) {
-                    dateTimeField.setText("");
-                }
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                if (dateTimeField.getText().isEmpty()) {
-                    dateTimeField.setText("dd/MM/yyyy HH:mm");
-                }
-            }
-        });
-        JTextField locationField = new JTextField(20);
-        JTextArea descriptionArea = new JTextArea(3, 20);
-        JComboBox<String> categoryCombo = new JComboBox<>(new String[]{
-                "Meeting", "Birthday", "Appointment", "Reminder", "Other"});
-        JSpinner reminderSpinner = new JSpinner(
-                new SpinnerNumberModel(30, 0, 10080, 10));
-
-        // Pre-fill form with existing event data
-        titleField.setText(existingEvent.getTitle());
-        dateTimeField.setText(existingEvent.getDateTime()
-                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-        locationField.setText(existingEvent.getLocation());
-        descriptionArea.setText(existingEvent.getDescription());
-        categoryCombo.setSelectedItem(existingEvent.getCategory());
-        reminderSpinner.setValue(existingEvent.getReminderMinutesBefore());
-
-        // Create form panel
-        JPanel formPanel = new JPanel(new GridLayout(0, 2, 6, 6));
-        formPanel.add(new JLabel("Title:*"));
-        formPanel.add(titleField);
-        formPanel.add(new JLabel("Date/Time:*"));
-        formPanel.add(dateTimeField);
-        formPanel.add(new JLabel("Location:"));
-        formPanel.add(locationField);
-        formPanel.add(new JLabel("Category:*"));
-        formPanel.add(categoryCombo);
-        formPanel.add(new JLabel("Reminder (min):"));
-        formPanel.add(reminderSpinner);
-        formPanel.add(new JLabel("Description:"));
-        formPanel.add(new JScrollPane(descriptionArea));
-
-        // Show dialog and get user response
-        int result = JOptionPane.showConfirmDialog(this, formPanel,
-                "Edit Event",
-                JOptionPane.OK_CANCEL_OPTION);
-
-        if (result != JOptionPane.OK_OPTION) {
-            return;
-        }
-
+    private void createEventFromForm(EventFormDialog.EventFormData data) {
         try {
-            // Parse date/time from user input
-            java.time.format.DateTimeFormatter formatter =
-                    java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            LocalDateTime dateTime = LocalDateTime.parse(dateTimeField.getText().trim(), formatter);
+            if (data.isRecurring()) {
+                controller.createRecurringEvent(
+                        data.title(), data.dateTime(), data.location(), data.description(),
+                        data.category(), data.reminderMinutes(), data.recurrenceType(), data.repetitions());
+            } else {
+                controller.createEvent(
+                        data.title(), data.dateTime(), data.location(), data.description(),
+                        data.category(), data.reminderMinutes());
+            }
+            refreshAfterChange();
+        } catch (InvalidEventException ex) {
+            showValidationError(ex);
+        }
+    }
 
-            // Extract form field values
-            String title = titleField.getText().trim();
-            String location = locationField.getText().trim();
-            String description = descriptionArea.getText().trim();
-            String category = (String) categoryCombo.getSelectedItem();
-            int reminderMinutes = (int) reminderSpinner.getValue();
-
-            // Handle editing of recurring events
+    private void updateEventFromForm(Event existingEvent, EventFormDialog.EventFormData data) {
+        try {
             if (existingEvent instanceof RecurringEvent recurringEvent) {
                 String[] options = {"This occurrence only", "This and all future occurrences", "Cancel"};
                 int choice = JOptionPane.showOptionDialog(this,
@@ -401,180 +327,30 @@ public class MainFrame extends JFrame {
                         null, options, options[0]);
 
                 if (choice == 0) {
-                    // Edit only this occurrence
-                    controller.updateEvent(recurringEvent, title, dateTime, location, description, category, reminderMinutes);
+                    controller.updateEvent(recurringEvent, data.title(), data.dateTime(), data.location(),
+                            data.description(), data.category(), data.reminderMinutes());
                 } else if (choice == 1) {
-                    // Edit this and all future occurrences
-                    controller.updateFutureOccurrences(recurringEvent, title, dateTime, location, description, category, reminderMinutes);
+                    controller.updateFutureOccurrences(recurringEvent, data.title(), data.dateTime(), data.location(),
+                            data.description(), data.category(), data.reminderMinutes());
                 }
-                // choice == 2: user cancelled
             } else {
-                // Edit single event
-                controller.updateEvent(existingEvent, title, dateTime, location, description, category, reminderMinutes);
+                controller.updateEvent(existingEvent, data.title(), data.dateTime(), data.location(),
+                        data.description(), data.category(), data.reminderMinutes());
             }
-
-            // Refresh UI
-            calendarPanel.refresh();
-            updateEventList(selectedDate);
-
-        } catch (java.time.format.DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Invalid date format! Use: dd/MM/yyyy HH:mm",
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
+            refreshAfterChange();
         } catch (InvalidEventException ex) {
-            JOptionPane.showMessageDialog(this,
-                    ex.getMessage(),
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
+            showValidationError(ex);
         }
     }
 
-    /**
-     * Opens a form dialog for creating a new event or editing an existing event.
-     *
-     * The form includes options for:
-     * - Event title, date/time, location, category
-     * - Reminder time
-     * - Recurrence settings (daily, weekly, monthly)
-     * - Number of repetitions
-     * - Event description
-     *
-     * @param existingEvent The Event to edit, or null to create a new event
-     */
-    private void openEventForm(Event existingEvent) {
-        // Create form fields
-        JTextField titleField = new JTextField(20);
-        JTextField dateTimeField = new JTextField("dd/MM/yyyy HH:mm", 20);
-        dateTimeField.addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                if (dateTimeField.getText().equals("dd/MM/yyyy HH:mm")) {
-                    dateTimeField.setText("");
-                }
-            }
+    private void refreshAfterChange() {
+        calendarPanel.refresh();
+        updateEventList(selectedDate);
+    }
 
-            @Override
-            public void focusLost(FocusEvent e) {
-                if (dateTimeField.getText().isEmpty()) {
-                    dateTimeField.setText("dd/MM/yyyy HH:mm");
-                }
-            }
-        });
-        JTextField locationField = new JTextField(20);
-        JTextArea descriptionArea = new JTextArea(3, 20);
-        JComboBox<String> categoryCombo = new JComboBox<>(new String[]{
-                "Meeting", "Birthday", "Appointment", "Reminder", "Other"});
-        JSpinner reminderSpinner = new JSpinner(
-                new SpinnerNumberModel(30, 0, 10080, 10));
-        JSpinner repetitionsSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 365, 1));
-        JComboBox<String> recurrenceCombo = new JComboBox<>(new String[]{
-                "No recurrence", "Daily", "Weekly", "Monthly"});
-
-        // Pre-fill form if editing existing event
-        if (existingEvent != null) {
-            titleField.setText(existingEvent.getTitle());
-            dateTimeField.setText(existingEvent.getDateTime()
-                    .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-            locationField.setText(existingEvent.getLocation());
-            descriptionArea.setText(existingEvent.getDescription());
-            categoryCombo.setSelectedItem(existingEvent.getCategory());
-            reminderSpinner.setValue(existingEvent.getReminderMinutesBefore());
-        }
-
-        // Create form panel
-        JPanel formPanel = new JPanel(new GridLayout(0, 2, 6, 6));
-        formPanel.add(new JLabel("Title:*"));
-        formPanel.add(titleField);
-        formPanel.add(new JLabel("Date/Time:*"));
-        formPanel.add(dateTimeField);
-        formPanel.add(new JLabel("Location:"));
-        formPanel.add(locationField);
-        formPanel.add(new JLabel("Category:*"));
-        formPanel.add(categoryCombo);
-        formPanel.add(new JLabel("Reminder (min):"));
-        formPanel.add(reminderSpinner);
-        formPanel.add(new JLabel("Recurrence:"));
-        formPanel.add(recurrenceCombo);
-        formPanel.add(new JLabel("Repetitions (1-365):"));
-        formPanel.add(repetitionsSpinner);
-        formPanel.add(new JLabel("Description:"));
-        formPanel.add(new JScrollPane(descriptionArea));
-
-        // Show dialog and get user response
-        int result = JOptionPane.showConfirmDialog(this, formPanel,
-                existingEvent == null ? "New Event" : "Edit Event",
-                JOptionPane.OK_CANCEL_OPTION);
-
-        if (result != JOptionPane.OK_OPTION) {
-            return;
-        }
-
-        try {
-            // Parse date/time from user input
-            java.time.format.DateTimeFormatter formatter =
-                    java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            LocalDateTime dateTime = LocalDateTime.parse(dateTimeField.getText().trim(), formatter);
-
-            // Extract form field values
-            String title = titleField.getText().trim();
-            String location = locationField.getText().trim();
-            String description = descriptionArea.getText().trim();
-            String category = (String) categoryCombo.getSelectedItem();
-            int reminderMinutes = (int) reminderSpinner.getValue();
-            String recurrenceString = (String) recurrenceCombo.getSelectedItem();
-            int repetitions = (int) repetitionsSpinner.getValue();
-
-            if (existingEvent == null) {
-                // CREATE NEW EVENT
-                if (recurrenceString.equals("No recurrence")) {
-                    // Create single event
-                    controller.createEvent(title, dateTime, location, description, category, reminderMinutes);
-                } else {
-                    // Create recurring event
-                    RecurringEvent.RecurrenceType recurrenceType = switch (recurrenceString) {
-                        case "Daily" -> RecurringEvent.RecurrenceType.DAILY;
-                        case "Weekly" -> RecurringEvent.RecurrenceType.WEEKLY;
-                        case "Monthly" -> RecurringEvent.RecurrenceType.MONTHLY;
-                        default -> RecurringEvent.RecurrenceType.NONE;
-                    };
-                    controller.createRecurringEvent(title, dateTime, location, description, category, reminderMinutes, recurrenceType, repetitions);
-                }
-            } else {
-                // EDIT EXISTING EVENT
-                if (existingEvent instanceof RecurringEvent recurringEvent) {
-                    String[] options = {"This occurrence only", "This and all future occurrences", "Cancel"};
-                    int choice = JOptionPane.showOptionDialog(this,
-                            "This is a recurring event. What would you like to edit?",
-                            "Edit recurring event",
-                            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
-                            null, options, options[0]);
-
-                    if (choice == 0) {
-                        // Edit only this occurrence
-                        controller.updateEvent(recurringEvent, title, dateTime, location, description, category, reminderMinutes);
-                    } else if (choice == 1) {
-                        // Edit this and all future occurrences
-                        controller.updateFutureOccurrences(recurringEvent, title, dateTime, location, description, category, reminderMinutes);
-                    }
-                    // choice == 2: user cancelled
-                } else {
-                    // Edit single event
-                    controller.updateEvent(existingEvent, title, dateTime, location, description, category, reminderMinutes);
-                }
-            }
-
-            // Refresh UI
-            calendarPanel.refresh();
-            updateEventList(selectedDate);
-
-        } catch (java.time.format.DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Invalid date format! Use: dd/MM/yyyy HH:mm",
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
-        } catch (InvalidEventException ex) {
-            JOptionPane.showMessageDialog(this,
-                    ex.getMessage(),
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
-        }
+    private void showValidationError(InvalidEventException ex) {
+        JOptionPane.showMessageDialog(this, ex.getMessage(),
+                "Validation Error", JOptionPane.ERROR_MESSAGE);
     }
 
     /**

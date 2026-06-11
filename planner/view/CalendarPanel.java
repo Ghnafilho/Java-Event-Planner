@@ -61,10 +61,10 @@ public class CalendarPanel extends JPanel {
         buildPanel();
     }
     /**
-     * This function will recive a category of any event, and return the color 
-     * that have to be displayed on screen in the event day
-     * @param category
-     * @return the color that will be used to display the event on screen
+     * Returns the display color for a given event category.
+     *
+     * @param category The event category name
+     * @return The color used to mark events on the calendar
      */
     private Color getEventColor(String category) {
         switch (category) {
