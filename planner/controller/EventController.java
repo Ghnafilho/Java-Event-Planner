@@ -411,17 +411,16 @@ public class EventController {
             throw new InvalidEventException("Email address is invalid.");
         }
 
-        // Create the attendee object once to add to multiple events
-        Attendee newAttendee = new Attendee(name.trim(), email.trim());
+        String trimmedName = name.trim();
+        String trimmedEmail = email.trim();
 
-        // Add attendee to all future occurrences of this recurring event
         events.stream()
                 .filter(e -> e instanceof RecurringEvent
                         && e.getTitle().equals(event.getTitle())
                         && !e.getDateTime().isBefore(event.getDateTime()))
-                .forEach(e -> e.addAttendee(newAttendee));
+                .forEach(e -> e.addAttendee(
+                        new Attendee(trimmedName, trimmedEmail)));
 
-        // Persist changes to storage
         storage.saveEvents(events);
     }
 

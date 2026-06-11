@@ -322,11 +322,11 @@ public class MainFrame extends JFrame {
     private void openEditableEventForm(Event existingEvent) {
         // Create form fields with initial values
         JTextField titleField = new JTextField(20);
-        JTextField dateTimeField = new JTextField("Day/Month/Year Hour:Minutes", 20);
+        JTextField dateTimeField = new JTextField("dd/MM/yyyy HH:mm", 20);
         dateTimeField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                if (dateTimeField.getText().equals("Day/Month/Year Hour:Minutes")) {
+                if (dateTimeField.getText().equals("dd/MM/yyyy HH:mm")) {
                     dateTimeField.setText("");
                 }
             }
@@ -334,7 +334,7 @@ public class MainFrame extends JFrame {
             @Override
             public void focusLost(FocusEvent e) {
                 if (dateTimeField.getText().isEmpty()) {
-                    dateTimeField.setText("Day/Month/Year Hour:Minutes");
+                    dateTimeField.setText("dd/MM/yyyy HH:mm");
                 }
             }
         });
@@ -443,11 +443,11 @@ public class MainFrame extends JFrame {
     private void openEventForm(Event existingEvent) {
         // Create form fields
         JTextField titleField = new JTextField(20);
-        JTextField dateTimeField = new JTextField("Day/Month/Year Hour:Minutes", 20);
+        JTextField dateTimeField = new JTextField("dd/MM/yyyy HH:mm", 20);
         dateTimeField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                if (dateTimeField.getText().equals("Day/Month/Year Hour:Minutes")) {
+                if (dateTimeField.getText().equals("dd/MM/yyyy HH:mm")) {
                     dateTimeField.setText("");
                 }
             }
@@ -455,7 +455,7 @@ public class MainFrame extends JFrame {
             @Override
             public void focusLost(FocusEvent e) {
                 if (dateTimeField.getText().isEmpty()) {
-                    dateTimeField.setText("Day/Month/Year Hour:Minutes");
+                    dateTimeField.setText("dd/MM/yyyy HH:mm");
                 }
             }
         });
