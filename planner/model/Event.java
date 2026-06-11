@@ -6,14 +6,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * * Descrição: Classe base do modelo de domínio que representa um evento no calendário
- * * Conceito OOP Aplicado - PREPARAÇÃO PARA HERANÇA:
- * Os atributos utilizam o modificador de acesso 'protected'. Isso encapsula os dados 
- * de classes externas, mas permite que subclasses (como RecurringEvent) tenham acesso 
- * direto aos atributos herdados.
- * * Conceito OOP Aplicado - COMPOSIÇÃO:
- * A classe Event tem uma lista de objetos Attendee, estabelecendo um relacionamento 
- * estrutural forte entre o evento e seus participantes.
+ * Description: Base domain model class representing an event in the calendar.
+ *
+ * OOP Concept Applied - PREPARATION FOR INHERITANCE:
+ * The attributes use the 'protected' access modifier. This encapsulates the data
+ * from external classes while allowing subclasses (such as RecurringEvent) to have
+ * direct access to the inherited attributes.
+ *
+ * OOP Concept Applied - COMPOSITION:
+ * The Event class contains a list of Attendee objects, establishing a strong
+ * structural relationship between the event and its participants.
  */
 public class Event {
     
@@ -25,10 +27,10 @@ public class Event {
     protected int reminderMinutesBefore; 
     protected List<Attendee> attendees;
 
-    /**
-     * Construtor da classe base Event.
-     * A lista de participantes é inicializada internamente para evitar NullPointerException.
-     */
+/**
+ * Constructor for the base Event class.
+ * The attendee list is initialized internally to prevent NullPointerException.
+ */
     public Event(String title, LocalDateTime dateTime, String location, String description, String category, int reminderMinutesBefore) {
         this.title = title;
         this.dateTime = dateTime;
@@ -39,7 +41,7 @@ public class Event {
         this.attendees = new ArrayList<>();
     }
 
-    // Métodos de acesso (getters e setters)
+    // Access methods (getters and setters)
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
@@ -60,30 +62,31 @@ public class Event {
 
     public List<Attendee> getAttendees() { return attendees; }
 
-    /**
-     * Adiciona um participante à lista estrutural do evento.
-     * @param attendee Objeto Attendee a ser adicionado
-     */
+/**
+ * Adds an attendee to the event's structural list.
+ * @param attendee Attendee object to be added
+ */
     public void addAttendee(Attendee attendee) {
         if (attendee != null) {
             this.attendees.add(attendee);
         }
     }
 
-    /**
-     * Retorna a data e hora formatadas para exibição no padrão brasileiro
-     */
+/**
+ * Returns the formatted date and time for display in the Brazilian format
+ */
     public String getFormattedDateTime() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         return dateTime.format(formatter);
     }
 
-    /**
-     * Converte o estado atual do objeto em uma String separada por delimitadores.
-     * Aplica sanitização nos campos de texto para evitar quebras de delimitador (;)
-     * durante o processo de File I/O.
-     * * @return String formatada para armazenamento.
-     */
+/**
+ * Converts the current state of the object into a delimiter-separated String.
+ * Applies sanitization to text fields to prevent delimiter (;) conflicts
+ * during the file I/O process.
+ *
+ * @return A formatted String ready for storage.
+ */
     public String toCSV() {
         String safeTitle = title != null ? title.replace(";", ",").replace("|", "") : "";
         String safeLocation = location != null ? location.replace(";", ",").replace("|", "") : "";
@@ -98,7 +101,7 @@ public class Event {
                   .append(safeCat).append(";")
                   .append(reminderMinutesBefore).append(";");
         
-        // Concatena as representações em texto dos objetos da lista de Composição
+        // Concatenates the text representations of the composition list objects
         for (int i = 0; i < attendees.size(); i++) {
             csvBuilder.append(attendees.get(i).toCSV());
             if (i < attendees.size() - 1) {
@@ -109,6 +112,10 @@ public class Event {
         return csvBuilder.toString();
     }
 
+/**
+ * Returns a textual representation of the event for display in the UI.
+ * @return A formatted String in the format "Title (Date and Time) - Category"
+ */
     @Override
     public String toString() {
         return title + " (" + getFormattedDateTime() + ") - " + category;

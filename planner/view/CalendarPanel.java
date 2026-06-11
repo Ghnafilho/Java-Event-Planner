@@ -68,11 +68,11 @@ public class CalendarPanel extends JPanel {
      */
     private Color getEventColor(String category) {
         switch (category) {
-            case "Meeting":     return new Color(59, 130, 246);  // azul
-            case "Birthday": return new Color(234, 179, 8);   // amarelo
-            case "Appointment":    return new Color(34, 197, 94);   // verde
-            case "Reminder":    return new Color(249, 115, 22);  // laranja
-            default:            return new Color(168, 85, 247);  // roxo (Outro)
+            case "Meeting":     return new Color(59, 130, 246);  // blue
+            case "Birthday": return new Color(234, 179, 8);   // yellow
+            case "Appointment":    return new Color(34, 197, 94);   // green
+            case "Reminder":    return new Color(249, 115, 22);  // orange
+            default:            return new Color(168, 85, 247);  // purple (other)
         }
     }
 
@@ -174,7 +174,7 @@ public class CalendarPanel extends JPanel {
         title.setFont(new Font("Segoe UI", Font.BOLD, 15));
 
         // Add components to navigation bar
-        nav.add(previousButton, BorderLayout.WEST);
+        nav.add(previousButton, BorderLayout.WEST );
         nav.add(title, BorderLayout.CENTER);
         nav.add(nextButton, BorderLayout.EAST);
         return nav;

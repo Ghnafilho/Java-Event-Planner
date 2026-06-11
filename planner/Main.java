@@ -11,17 +11,17 @@ public class Main {
     public static void main(String[] args) {
 
 
-        // SwingUtilities.invokeLater garante que a UI seja criada
-        // na thread correta do Swing (EDT — Event Dispatch Thread)
+        // SwingUtilities.invokeLater ensures that the UI is created
+        // on the correct Swing thread (EDT - Event Dispatch Thread).
         SwingUtilities.invokeLater(() -> {
             EventController controller = new EventController();
 
 
-            // Inicia a thread de lembretes em paralelo
+            // Starts the reminder thread in parallel
             new ReminderThread(controller).start();
 
 
-            // Cria e exibe a janela principal
+            // Creates and displays the main window
             MainFrame frame = new MainFrame(controller);
             frame.setVisible(true);
         });

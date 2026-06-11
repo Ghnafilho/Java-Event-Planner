@@ -3,30 +3,31 @@ package planner.model;
 import java.time.LocalDateTime;
 
 /**
- * * Descrição: Representa um evento com regras de repetição cronológica
- * * Conceito OOP Aplicado - HERANÇA:
- * Utiliza a palavra-chave 'extends' para herdar a estrutura e o comportamento 
- * da superclasse 'Event'. Isso permite a extensão da classe base com novas 
- * características exclusivas (recurrenceType), promovendo reuso de código.
+ * Description: Represents an event with recurring scheduling rules.
+ *
+ * OOP Concept Applied - INHERITANCE:
+ * Uses the 'extends' keyword to inherit the structure and behavior
+ * of the 'Event' superclass. This allows the base class to be extended
+ * with new exclusive features (recurrenceType), promoting code reuse.
  */
 public class RecurringEvent extends Event {
 
-    /**
-     * Type safety (segurança de tipos):
-     * A utilização de Enum restringe os valores possíveis de repetição,
-     * garantindo a integridade dos dados cronológicos
-     */
+/**
+ * Type Safety:
+ * The use of an Enum restricts the possible recurrence values,
+ * ensuring the integrity of chronological scheduling data.
+ */
     public enum RecurrenceType {
         DAILY, WEEKLY, MONTHLY, NONE
     }
 
     private RecurrenceType recurrenceType;
 
-    /**
-     * Construtor da subclasse.
-     * A instrução 'super' é utilizada para invocar o construtor da superclasse 'Event',
-     * garantindo que os atributos herdados sejam inicializados corretamente.
-     */
+/**
+ * Subclass constructor.
+ * The 'super' statement is used to invoke the constructor of the 'Event'
+ * superclass, ensuring that inherited attributes are properly initialized.
+ */
     public RecurringEvent(String title, LocalDateTime dateTime, String location, String description, String category, int reminderMinutesBefore, RecurrenceType recurrenceType) {
         super(title, dateTime, location, description, category, reminderMinutesBefore);
         this.recurrenceType = recurrenceType;
@@ -35,10 +36,10 @@ public class RecurringEvent extends Event {
     public RecurrenceType getRecurrenceType() { return recurrenceType; }
     public void setRecurrenceType(RecurrenceType recurrenceType) { this.recurrenceType = recurrenceType; }
 
-    /**
-     * Calcula a data e hora da proxima ocorrência do evento
-     * baseando-se no tipo de recorrência associado ao objeto.
-     */
+/**
+ * Calculates the date and time of the next occurrence of the event
+ * based on the recurrence type associated with the object.
+ */
     public LocalDateTime calculateNextOccurrence() {
         switch (recurrenceType) {
             case DAILY: return this.dateTime.plusDays(1);
@@ -48,12 +49,12 @@ public class RecurringEvent extends Event {
         }
     }
 
-    /**
-     * Conceito OOP Aplicado - POLIMORFISMO:
-     * Sobrescreve o método de serialização. A chamada 'super.toCSV()' reaproveita 
-     * a lógica implementada na classe pai, adicionando o sufixo necessário para 
-     * identificacao da subclasse durante o carregamento dos dados
-     */
+/**
+ * OOP Concept Applied - POLYMORPHISM:
+ * Overrides the serialization method. The call to 'super.toCSV()' reuses
+ * the logic implemented in the parent class, adding the necessary suffix
+ * to identify the subclass during data loading.
+ */
     @Override
     public String toCSV() {
         return super.toCSV() + ";[REC:" + recurrenceType.name() + "]";

@@ -7,45 +7,48 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * * Descrição: Componente responsável pela persistência de dados em disco (File I/O).
- * * Arquitetura Aplicada - SEPARAÇÃO DE CONCEITOS:
- * Isola a lógica de leitura e escrita de arquivos das lógicas de domínio, garantindo
- * que as entidades do modelo não depnedam de implementações especificas do sistema de arquivos.
+ * Description: Component responsible for data persistence on disk (File I/O).
+ *
+ * Applied Architecture Principle - SEPARATION OF CONCERNS:
+ * Isolates file reading and writing logic from domain logic, ensuring that
+ * model entities do not depend on specific file system implementations.
  */
 public class DataStorage {
     
     private static final String FILE_PATH = "events_data.txt";
 
-    /**
-     * Serializa a estrutura de dados em memória para um arquivo local.
-     * Utiliza try-with-resources para garantir o fechamento seguro das streams I/O
-     */
+/**
+ * Serializes the in-memory data structure to a local file.
+ * Uses try-with-resources to ensure the safe and automatic
+ * closing of I/O streams.
+ */
     public void saveEvents(List<Event> events) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
             for (Event event : events) {
-                // Polimorfismo em tempo de execução, ou seja, o método toCSV() adequado
-                // será evocado dependendo do tipo da instância (Event ou RecurringEvent)
+                // Runtime polymorphism, i.e., the appropriate toCSV() method
+                // will be invoked depending on the type of the instance (Event or RecurringEvent)
                 writer.write(event.toCSV());
                 writer.newLine();
             }
         } catch (IOException e) {
-            System.err.println("Falha de I/O ao salvar eventos: " + e.getMessage());
+            System.err.println("I/O failure while saving events: " + e.getMessage());
         }
     }
 
-    /**
-     * Reconstrói as entidades orientadas a objetos a partir do arquivo texto.
-     * * Tratamento de exceções: 
-     * Engloba um bloco try-catch individual por linha lida (dentro do loop while).
-     * Isso assegura tolerância a falhas. Uma única linha corrompida será ignorada,
-     * impedindo a quebra total do processo de carregamento.
-     */
+/**
+ * Reconstructs object-oriented entities from the text file.
+ *
+ * Exception Handling:
+ * Uses an individual try-catch block for each line read (inside the while loop).
+ * This ensures fault tolerance. A single corrupted line will be ignored,
+ * preventing the entire loading process from failing.
+ */
     public List<Event> loadEvents() {
         List<Event> events = new ArrayList<>();
         File file = new File(FILE_PATH);
 
         if (!file.exists()) {
-            return events; // Inicialização segura se o sistema rodar pela primeira vez
+            return events; // Safe initialization if the system runs for the first time
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -53,7 +56,7 @@ public class DataStorage {
             
             while ((line = reader.readLine()) != null) {
                 try {
-                    // O limite -1 impede que dados omitidos ao final da linha afetem o parsing
+                    // The limit -1 prevents missing data at the end of the line from affecting the parsing
                     String[] parts = line.split(";", -1);
                     
                     if (parts.length < 7) continue; 
@@ -68,14 +71,14 @@ public class DataStorage {
                     boolean isRecurring = false;
                     RecurringEvent.RecurrenceType recType = RecurringEvent.RecurrenceType.NONE;
                     
-                    // Identifica se a linha persistida pertence a subclasse RecurringEvent
+                    // Identifies if the persisted line belongs to the RecurringEvent subclass
                     if (parts.length >= 8 && parts[7].startsWith("[REC:")) {
                         isRecurring = true;
                         String typeStr = parts[7].substring(5, parts[7].length() - 1);
                         recType = RecurringEvent.RecurrenceType.valueOf(typeStr);
                     }
                     
-                    // Instancia a entidade correta
+                    // Instantiates the correct entity
                     Event event;
                     if (isRecurring) {
                         event = new RecurringEvent(title, dt, location, description, category, reminder, recType);
@@ -83,7 +86,7 @@ public class DataStorage {
                         event = new Event(title, dt, location, description, category, reminder);
                     }
                     
-                    // Reconstrução da composição estrutural (Attendees)
+                    // Reconstruction of the structural composition (Attendees)
                     String attendeesStr = parts[6];
                     if (!attendeesStr.trim().isEmpty()) {
                         String[] attList = attendeesStr.split(",");
@@ -98,11 +101,11 @@ public class DataStorage {
                     events.add(event);
                     
                 } catch (Exception e) {
-                    System.err.println("Aviso: Falha ao realizar parsing na linha. Restauração parcial aplicada.");
+                    System.err.println("Warning: Failure to perform parsing on the line. Partial restoration applied.");
                 }
             }
         } catch (IOException e) {
-            System.err.println("Erro crítico ao acessar o banco de dados local: " + e.getMessage());
+            System.err.println("Critical error accessing local database: " + e.getMessage());
         }
 
         return events;
