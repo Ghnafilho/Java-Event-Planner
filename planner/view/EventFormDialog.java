@@ -95,119 +95,196 @@ public final class EventFormDialog {
 
 
     /**
-     * Displays a dialog for creating or editing an event.
-     *
-     * @param parent The parent component where the dialog will be displayed
-     * @param existingEvent The Event object to be edited (null for new events)
-     * @param includeRecurrence Whether to include recurrence options in the dialog
-     * @return An Optional containing the collected form data if successful,
-     *         or empty if the dialog is cancelled.
-     */
-    private static Optional<EventFormData> showDialog(
-            Component parent, Event existingEvent, boolean includeRecurrence) {
+    * Displays a dialog for creating or editing an event.
+    *
+    * Validation Behaviour:
+    * * The dialog remains open until the user provides valid input or cancels.
+    * * If validation fails, an error message is displayed and the form is shown
+    * again with all previously entered values preserved.
+    * * The title field is mandatory and cannot be empty.
+    * * The date/time field must follow the format "dd/MM/yyyy HH:mm".
+    *
+    * Recurrence Behaviour:
+    * * When creating a new event, recurrence options are available.
+    * * The repetitions field is dynamically shown only when a recurrence type
+    * other than "No recurrence" is selected.
+    *
+    * @param parent The parent component where the dialog will be displayed
+    * @param existingEvent The Event object to be edited (null for new events)
+    * @param includeRecurrence Whether recurrence controls should be displayed
+    * @return An Optional containing the collected form data when validation
+        succeeds, or an empty Optional if the user cancels the operation.
+
+
+    */
+        private static Optional<EventFormData> showDialog(
+        Component parent,
+        Event existingEvent,
+        boolean includeRecurrence) {
 
         // Create form fields for event information
         JTextField titleField = new JTextField(20);
         JTextField dateTimeField = createDateTimeField();
         JTextField locationField = new JTextField(20);
         JTextArea descriptionArea = new JTextArea(3, 20);
-        JComboBox<String> categoryComboBox = new JComboBox<>(CATEGORIES);
-        JSpinner reminderSpinner = new JSpinner(new SpinnerNumberModel(30, 0, 10080, 10));
-        JSpinner repetitionsSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 365, 1));
 
-        JComboBox<String> recurrenceComboBox = new JComboBox<>(new String[]{
-                "No recurrence", "Daily", "Weekly", "Monthly"});
+        JComboBox<String> categoryComboBox =
+                new JComboBox<>(CATEGORIES);
 
+        JSpinner reminderSpinner =
+                new JSpinner(new SpinnerNumberModel(30, 0, 10080, 10));
+
+        JSpinner repetitionsSpinner =
+                new JSpinner(new SpinnerNumberModel(1, 1, 365, 1));
+
+        JComboBox<String> recurrenceComboBox =
+                new JComboBox<>(new String[]{
+                        "No recurrence",
+                        "Daily",
+                        "Weekly",
+                        "Monthly"
+                });
+
+        // Populate fields when editing an existing event
         if (existingEvent != null) {
             titleField.setText(existingEvent.getTitle());
-            dateTimeField.setText(existingEvent.getDateTime().format(DATE_FORMATTER));
+            dateTimeField.setText(
+                    existingEvent.getDateTime().format(DATE_FORMATTER));
             locationField.setText(existingEvent.getLocation());
             descriptionArea.setText(existingEvent.getDescription());
             categoryComboBox.setSelectedItem(existingEvent.getCategory());
-            reminderSpinner.setValue(existingEvent.getReminderMinutesBefore());
-
+            reminderSpinner.setValue(
+                    existingEvent.getReminderMinutesBefore());
         }
 
         JPanel formPanel = new JPanel(new GridLayout(0, 2, 6, 6));
 
         formPanel.add(new JLabel("Title:*"));
         formPanel.add(titleField);
+
         formPanel.add(new JLabel("Date/Time:*"));
         formPanel.add(dateTimeField);
+
         formPanel.add(new JLabel("Location:"));
         formPanel.add(locationField);
+
         formPanel.add(new JLabel("Category:*"));
         formPanel.add(categoryComboBox);
+
         formPanel.add(new JLabel("Reminder (min):"));
         formPanel.add(reminderSpinner);
 
         if (includeRecurrence) {
-            // Recurrence label and combo box — always visible
+
             JLabel recurrenceLabel = new JLabel("Recurrence:");
             formPanel.add(recurrenceLabel);
             formPanel.add(recurrenceComboBox);
 
-            // Repetitions label and spinner — initially hidden
-            JLabel repetitionsLabel = new JLabel("Repetitions (1-365):");
+            JLabel repetitionsLabel =
+                    new JLabel("Repetitions (1-365):");
+
             repetitionsLabel.setVisible(false);
             repetitionsSpinner.setVisible(false);
 
             formPanel.add(repetitionsLabel);
             formPanel.add(repetitionsSpinner);
 
-            // Listener that shows/hides the repetitions field
-            // according to the selected recurrence type
             recurrenceComboBox.addActionListener(e -> {
-                String selected = (String) recurrenceComboBox.getSelectedItem();
-                boolean isRecurring = selected != null && !selected.equals("No recurrence");
+                String selected =
+                        (String) recurrenceComboBox.getSelectedItem();
+
+                boolean isRecurring =
+                        selected != null &&
+                        !selected.equals("No recurrence");
+
                 repetitionsLabel.setVisible(isRecurring);
                 repetitionsSpinner.setVisible(isRecurring);
 
-                // Forces the dialog to recalculate its layout
-                // after showing/hiding components
                 formPanel.revalidate();
                 formPanel.repaint();
 
-                // Resizes the parent window to fit the new content
-                SwingUtilities.getWindowAncestor(formPanel).pack();
+                Window window =
+                        SwingUtilities.getWindowAncestor(formPanel);
+
+                if (window != null) {
+                    window.pack();
+                }
             });
         }
+
         formPanel.add(new JLabel("Description:"));
         formPanel.add(new JScrollPane(descriptionArea));
 
-        String dialogTitle = existingEvent == null ? "New Event" : "Edit Event";
-        int result = JOptionPane.showConfirmDialog(parent, formPanel, dialogTitle,
-                JOptionPane.OK_CANCEL_OPTION);
+        String dialogTitle =
+                existingEvent == null
+                        ? "New Event"
+                        : "Edit Event";
 
-        if (result != JOptionPane.OK_OPTION) {
-            return Optional.empty();
+        while (true) {
+
+            int result = JOptionPane.showConfirmDialog(
+                    parent,
+                    formPanel,
+                    dialogTitle,
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE
+            );
+
+            if (result != JOptionPane.OK_OPTION) {
+                return Optional.empty();
+            }
+
+            try {
+
+                String title = titleField.getText().trim();
+
+                if (title.isEmpty()) {
+                    JOptionPane.showMessageDialog(
+                            parent,
+                            "Title is required.",
+                            "Validation Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                    continue;
+                }
+
+                LocalDateTime dateTime =
+                        LocalDateTime.parse(
+                                dateTimeField.getText().trim(),
+                                DATE_FORMATTER);
+
+                String recurrenceString =
+                        includeRecurrence
+                                ? (String) recurrenceComboBox.getSelectedItem()
+                                : "No recurrence";
+
+                return Optional.of(
+                        new EventFormData(
+                                title,
+                                dateTime,
+                                locationField.getText().trim(),
+                                descriptionArea.getText().trim(),
+                                (String) categoryComboBox.getSelectedItem(),
+                                (int) reminderSpinner.getValue(),
+                                parseRecurrenceType(recurrenceString),
+                                includeRecurrence
+                                        ? (int) repetitionsSpinner.getValue()
+                                        : 1
+                        )
+                );
+
+            } catch (DateTimeParseException ex) {
+
+                JOptionPane.showMessageDialog(
+                        parent,
+                        "Invalid date format.\nUse: " + DATE_PLACEHOLDER,
+                        "Validation Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
         }
 
-        try {
-            LocalDateTime dateTime = LocalDateTime.parse(dateTimeField.getText().trim(), DATE_FORMATTER);
-            String recurrenceString = includeRecurrence
-                    ? (String) recurrenceComboBox.getSelectedItem()
-                    : "No recurrence";
-
-            return Optional.of(new EventFormData(
-                    titleField.getText().trim(),
-                    dateTime,
-                    locationField.getText().trim(),
-                    descriptionArea.getText().trim(),
-                    (String) categoryComboBox.getSelectedItem(),
-                    (int) reminderSpinner.getValue(),
-                    parseRecurrenceType(recurrenceString),
-                    includeRecurrence ? (int) repetitionsSpinner.getValue() : 1
-            ));
-
-        } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(parent,
-                    "Invalid date format! Use: " + DATE_PLACEHOLDER,
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
-            return Optional.empty();
         }
-    }
-
 
 
     /**
