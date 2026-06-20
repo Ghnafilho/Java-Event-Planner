@@ -141,14 +141,37 @@ public final class EventFormDialog {
         formPanel.add(new JLabel("Reminder (min):"));
         formPanel.add(reminderSpinner);
 
-
         if (includeRecurrence) {
-            formPanel.add(new JLabel("Recurrence:"));
+            // Recurrence label and combo box — always visible
+            JLabel recurrenceLabel = new JLabel("Recurrence:");
+            formPanel.add(recurrenceLabel);
             formPanel.add(recurrenceComboBox);
-            formPanel.add(new JLabel("Repetitions (1-365):"));
-            formPanel.add(repetitionsSpinner);
-        }
 
+            // Repetitions label and spinner — initially hidden
+            JLabel repetitionsLabel = new JLabel("Repetitions (1-365):");
+            repetitionsLabel.setVisible(false);
+            repetitionsSpinner.setVisible(false);
+
+            formPanel.add(repetitionsLabel);
+            formPanel.add(repetitionsSpinner);
+
+            // Listener that shows/hides the repetitions field
+            // according to the selected recurrence type
+            recurrenceComboBox.addActionListener(e -> {
+                String selected = (String) recurrenceComboBox.getSelectedItem();
+                boolean isRecurring = selected != null && !selected.equals("No recurrence");
+                repetitionsLabel.setVisible(isRecurring);
+                repetitionsSpinner.setVisible(isRecurring);
+
+                // Forces the dialog to recalculate its layout
+                // after showing/hiding components
+                formPanel.revalidate();
+                formPanel.repaint();
+
+                // Resizes the parent window to fit the new content
+                SwingUtilities.getWindowAncestor(formPanel).pack();
+            });
+        }
         formPanel.add(new JLabel("Description:"));
         formPanel.add(new JScrollPane(descriptionArea));
 
