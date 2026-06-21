@@ -12,20 +12,34 @@ import planner.model.DataStorage;
 import planner.controller.EventController;
 
 /**
- * Unit tests for the EventController class.
- * Uses dependency injection to ensure file operations are performed 
- * in a temporary, isolated environment.
+ * Unit tests for the {@link planner.controller.EventController} class.
+ *
+ * <p>These tests use dependency injection to provide a temporary {@link DataStorage}
+ * instance that writes to an isolated temporary directory. Using JUnit's {@link TempDir}
+ * ensures filesystem side-effects are contained and cleaned up between runs.</p>
+ *
+ * @author Pedro Rocha
+ * @since 1.0
  */
 public class EventControllerTest {
 
     /**
      * Temporary directory for isolated file operations during testing.
+     *
+     * <p>The {@link TempDir} field is initialized by JUnit before each test method.
+     * Tests should construct any test-specific file paths off of this directory so
+     * that no permanent files are created on the developer's filesystem.</p>
      */
     @TempDir
     Path tempDir;
 
     /**
-     * Verifies that attempting to create an event with an empty title throws an InvalidEventException.
+     * Verifies that attempting to create an event with an empty title
+     * causes the {@link planner.exception.InvalidEventException} to be thrown.
+     *
+     * <p>The test constructs an {@link EventController} backed by a temporary
+     * {@link DataStorage} file and asserts that creating an event with an
+     * empty title is rejected.</p>
      */
     @Test
     public void testCreateEvent_InvalidTitle_ShouldThrowException() {
@@ -40,7 +54,10 @@ public class EventControllerTest {
     }
 
     /**
-     * Verifies that creating an event with valid data correctly adds it to the internal list.
+     * Verifies that creating an event with valid input data returns a non-null {@link Event}
+     * and that the created event is added to the controller's internal list.
+     *
+     * @throws InvalidEventException if the provided test data is considered invalid by the controller.
      */
     @Test
     public void testCreateEvent_ValidData_ShouldAddToList() throws InvalidEventException {
@@ -59,8 +76,13 @@ public class EventControllerTest {
     }
 
     /**
-     * Verifies that a recurring event is correctly instantiated, identified as a RecurringEvent, 
-     * and assigned a unique series identifier.
+     * Verifies that a recurring event is instantiated as a {@link RecurringEvent},
+     * that the recurrence type is set correctly, and that a series identifier is generated.
+     *
+     * <p>This test constructs a weekly recurring event with a defined count and checks
+     * the resulting object's runtime type and recurrence metadata.</p>
+     *
+     * @throws InvalidEventException if the recurrence configuration is invalid.
      */
     @Test
     public void testCreateRecurringEvent_Success() throws InvalidEventException {
