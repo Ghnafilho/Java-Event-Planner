@@ -16,3 +16,4 @@ Aula;2026-06-20T15:45:00;;;Meeting;30;;[REC:DAILY:8e87d2a8-c794-4309-a10e-bedcdc
 Missa;2026-07-12T15:10:00;Igreja;;Other;30;
 Teste 2;2026-07-01T15:25:00;ICMC;;Meeting;30;
 Aula;2026-12-15T12:10:00;;;Birthday;30;
+Arroz;2026-10-15T15:45:00;;;Meeting;30;

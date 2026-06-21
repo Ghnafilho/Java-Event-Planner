@@ -73,10 +73,10 @@ public class Event {
     }
 
 /**
- * Returns the formatted date and time for display (dd/MM/yyyy HH:mm).
+ * Returns the formatted date and time for display (MM/dd/yyyy HH:mm).
  */
     public String getFormattedDateTime() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
         return dateTime.format(formatter);
     }
 

@@ -72,7 +72,7 @@ public class CalendarPanel extends JPanel {
 
     // Formatter used to display dates in the daily/weekly header labels
     private static final DateTimeFormatter LABEL_FORMAT =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            DateTimeFormatter.ofPattern("MM/dd/yyyy");
 
     /**
      * Constructs a CalendarPanel with a reference to the EventController.
@@ -263,7 +263,7 @@ public class CalendarPanel extends JPanel {
             case MONTHLY:
             default:
                 String monthName = currentMonth.getMonth()
-                        .getDisplayName(TextStyle.FULL, Locale.of("pt", "BR"));
+                        .getDisplayName(TextStyle.FULL, Locale.of("en", "US"));
                 return monthName.substring(0, 1).toUpperCase()
                         + monthName.substring(1) + " " + currentMonth.getYear();
         }
@@ -408,7 +408,7 @@ public class CalendarPanel extends JPanel {
         JPanel header = new JPanel();
         header.setBackground(new Color(219, 234, 254)); // light blue
         String dayName = currentDay.getDayOfWeek()
-                .getDisplayName(TextStyle.FULL, Locale.of("pt", "BR"));
+                .getDisplayName(TextStyle.FULL, Locale.of("en", "US"));
         JLabel headerLabel = new JLabel(
                 dayName.substring(0, 1).toUpperCase() + dayName.substring(1)
                         + " – " + currentDay.format(LABEL_FORMAT),
@@ -545,7 +545,7 @@ public class CalendarPanel extends JPanel {
 
         // Abbreviated day name (e.g. "Dom", "Seg")
         String abbr = day.getDayOfWeek()
-                .getDisplayName(TextStyle.SHORT, Locale.of("pt", "BR"));
+                .getDisplayName(TextStyle.SHORT, Locale.of("en", "US"));
         JLabel nameLabel = new JLabel(
                 abbr.substring(0, 1).toUpperCase() + abbr.substring(1),
                 SwingConstants.CENTER);

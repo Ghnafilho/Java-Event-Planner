@@ -31,7 +31,7 @@ import java.util.Optional;
 
 public final class EventFormDialog {
 
-    private static final String DATE_PLACEHOLDER = "dd/MM/yyyy HH:mm";
+    private static final String DATE_PLACEHOLDER = "MM/dd/yyyy HH:mm";
 
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern(DATE_PLACEHOLDER);
@@ -102,7 +102,7 @@ public final class EventFormDialog {
     * * If validation fails, an error message is displayed and the form is shown
     * again with all previously entered values preserved.
     * * The title field is mandatory and cannot be empty.
-    * * The date/time field must follow the format "dd/MM/yyyy HH:mm".
+    * * The date/time field must follow the format "MM/dd/yyyy HH:mm".
     *
     * Recurrence Behaviour:
     * * When creating a new event, recurrence options are available.
