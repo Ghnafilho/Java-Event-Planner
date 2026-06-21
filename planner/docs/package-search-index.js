@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html","k":"18"},{"l":"planner"},{"l":"planner.controller"},{"l":"planner.exception"},{"l":"planner.model"},{"l":"planner.view"}];updateSearchResults();
