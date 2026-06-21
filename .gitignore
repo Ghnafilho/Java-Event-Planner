@@ -1,4 +1,14 @@
+# Arquivos compilados Java
 *.class
+
+# Pasta de build
 out/
+
+# Dependências
 lib/
+
+# Configurações do VS Code
 .vscode/
+
+# Arquivos de sistema
+.DS_Store
