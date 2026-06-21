@@ -38,12 +38,15 @@ public class EventController {
      * The events are loaded into memory for faster access during the application runtime.
      */
     public EventController() {
-        this.storage = new DataStorage();
-        List<Event> loadedEvents = storage.loadEvents();
+        this(new DataStorage());
+    }
+    public EventController(DataStorage storage) {
+        this.storage = storage;
+        List<Event> loadedEvents = this.storage.loadEvents();
         this.events = new ArrayList<>(loadedEvents);
 
         if (DataStorage.assignLegacySeriesIds(loadedEvents)) {
-            storage.saveEvents(events);
+            this.storage.saveEvents(events);
         }
     }
 
