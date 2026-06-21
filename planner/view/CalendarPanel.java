@@ -15,18 +15,20 @@ import java.util.List;
 /**
  * CalendarPanel is a custom JPanel that displays an interactive calendar view for event management.
  *
- * Features:
- * - Three view modes: Daily, Weekly and Monthly calendar grid
- * - Navigation buttons to move between days, weeks or months depending on the active view
- * - Visual indicators for today's date (blue highlight)
- * - Visual indicators for selected date (light blue highlight)
- * - Colored dots on dates that have scheduled events, grouped by category
- * - Click handler to notify parent components when a date is selected
- * - Automatic refresh when events are added or the displayed period changes
- * - Toggle buttons on the navigation bar to switch between view modes
+ * <p>Features:</p>
+ * <ul>
+ *   <li>Three view modes: Daily, Weekly and Monthly calendar grid</li>
+ *   <li>Navigation buttons to move between days, weeks or months depending on the active view</li>
+ *   <li>Visual indicators for today's date (blue highlight)</li>
+ *   <li>Visual indicators for selected date (light blue highlight)</li>
+ *   <li>Colored dots on dates that have scheduled events, grouped by category</li>
+ *   <li>Click handler to notify parent components when a date is selected</li>
+ *   <li>Automatic refresh when events are added or the displayed period changes</li>
+ *   <li>Toggle buttons on the navigation bar to switch between view modes</li>
+ * </ul>
  *
- * The panel uses a callback pattern (Consumer<LocalDate>) to notify parent components
- * (typically MainFrame) when the user clicks on a date.
+ * <p>The panel uses a callback pattern ({@link Consumer}&lt;{@link LocalDate}&gt;) to notify parent
+ * components (typically MainFrame) when the user clicks on a date.</p>
  *
  * @author Gustavo Henrique Nogueira de Andrade Filho
  * @author Pedro Rocha Dantas
@@ -77,11 +79,11 @@ public class CalendarPanel extends JPanel {
     /**
      * Constructs a CalendarPanel with a reference to the EventController.
      *
-     * Initialises the calendar to display the current month and sets the
-     * selected date to today. The default view mode is MONTHLY.
-     * The panel layout is configured and the calendar grid is built.
+     * <p>Initialises the calendar to display the current month and sets the selected date to today.
+     * The default view mode is {@link ViewMode#MONTHLY}. The panel layout is configured and the
+     * calendar grid is built.</p>
      *
-     * @param controller The EventController instance used for accessing events
+     * @param controller The {@link EventController} instance used for accessing events
      */
     public CalendarPanel(EventController controller) {
         this.controller        = controller;
@@ -97,6 +99,16 @@ public class CalendarPanel extends JPanel {
 
     /**
      * Returns the display colour for a given event category.
+     *
+     * <p>Maps predefined event categories to their corresponding {@link Color} values:
+     * <ul>
+     *   <li>Meeting: Red (RGB: 200, 50, 46)</li>
+     *   <li>Birthday: Yellow (RGB: 234, 179, 8)</li>
+     *   <li>Appointment: Green (RGB: 34, 197, 94)</li>
+     *   <li>Reminder: Orange (RGB: 249, 115, 22)</li>
+     *   <li>Other: Purple (RGB: 168, 85, 247)</li>
+     * </ul>
+     * </p>
      *
      * @param category The event category name (e.g. "Meeting", "Birthday")
      * @return The {@link Color} used to mark events of that category on the calendar
@@ -114,11 +126,10 @@ public class CalendarPanel extends JPanel {
     /**
      * Sets the callback function invoked when a date cell is clicked.
      *
-     * This callback is typically set by MainFrame to receive notifications
-     * whenever the user selects a date. The callback receives the selected
-     * {@link LocalDate} as its parameter.
+     * <p>This callback is typically set by MainFrame to receive notifications whenever the user
+     * selects a date. The callback receives the selected {@link LocalDate} as its parameter.</p>
      *
-     * @param callback A {@link Consumer} that accepts a LocalDate when a date is clicked
+     * @param callback A {@link Consumer} that accepts a {@link LocalDate} when a date is clicked
      */
     public void setOnDateClickCallback(Consumer<LocalDate> callback) {
         this.onDateClickCallback = callback;
@@ -127,11 +138,13 @@ public class CalendarPanel extends JPanel {
     /**
      * Refreshes the entire calendar panel.
      *
-     * Removes all components, rebuilds the calendar grid for the active view mode,
-     * and repaints the panel. Call this method after:
-     * - Changing the displayed period or view mode
-     * - Adding or removing events
-     * - Selecting a different date
+     * <p>Removes all components, rebuilds the calendar grid for the active view mode, and repaints
+     * the panel. Call this method after:
+     * <ul>
+     *   <li>Changing the displayed period or view mode</li>
+     *   <li>Adding or removing events</li>
+     *   <li>Selecting a different date</li>
+     * </ul>
      */
     public void refresh() {
         removeAll();
@@ -143,8 +156,8 @@ public class CalendarPanel extends JPanel {
     /**
      * Navigates the calendar back to the current day and resets the view to MONTHLY.
      *
-     * Sets the displayed month, week anchor and day to today and the selected date
-     * to today, then refreshes the panel to reflect these changes.
+     * <p>Sets the displayed month, week anchor and day to today and the selected date to today,
+     * then refreshes the panel to reflect these changes.</p>
      */
     public void goToToday() {
         currentMonth     = YearMonth.now();
@@ -158,11 +171,14 @@ public class CalendarPanel extends JPanel {
     /**
      * Builds the complete calendar panel structure for the active view mode.
      *
-     * Delegates grid construction to the appropriate private helper method
-     * based on the current {@link ViewMode}:
-     * - {@link #createDailyGrid()} for DAILY
-     * - {@link #createWeeklyGrid()} for WEEKLY
-     * - {@link #createCalendarGrid()} for MONTHLY
+     * <p>Delegates grid construction to the appropriate private helper method based on the current
+     * {@link ViewMode}:
+     * <ul>
+     *   <li>{@link #createDailyGrid()} for {@link ViewMode#DAILY}</li>
+     *   <li>{@link #createWeeklyGrid()} for {@link ViewMode#WEEKLY}</li>
+     *   <li>{@link #createCalendarGrid()} for {@link ViewMode#MONTHLY}</li>
+     * </ul>
+     * </p>
      */
     private void buildPanel() {
         add(createNavigationBar(), BorderLayout.NORTH);
@@ -181,13 +197,14 @@ public class CalendarPanel extends JPanel {
     /**
      * Creates the navigation bar at the top of the calendar.
      *
-     * The navigation bar contains:
-     * - Left arrow button to go to the previous period (day / week / month)
-     * - Period title label in the centre
-     * - Right arrow button to go to the next period
-     * - Three toggle buttons on the right to switch between view modes
-     *
-     * The bar has a blue background with white text for visual consistency.
+     * <p>The navigation bar contains:
+     * <ul>
+     *   <li>Left arrow button to go to the previous period (day / week / month)</li>
+     *   <li>Period title label in the centre</li>
+     *   <li>Right arrow button to go to the next period</li>
+     *   <li>Three toggle buttons on the right to switch between view modes</li>
+     * </ul>
+     * The bar has a blue background with white text for visual consistency.</p>
      *
      * @return A {@link JPanel} containing the navigation controls
      */
@@ -244,9 +261,13 @@ public class CalendarPanel extends JPanel {
     /**
      * Builds the title text shown in the navigation bar depending on the view mode.
      *
-     * - DAILY:   "15/06/2026"
-     * - WEEKLY:  "15/06/2026 – 21/06/2026"
-     * - MONTHLY: "Junho 2026"
+     * <p>Title format varies by view mode:
+     * <ul>
+     *   <li>{@link ViewMode#DAILY}: "15/06/2026"</li>
+     *   <li>{@link ViewMode#WEEKLY}: "15/06/2026 – 21/06/2026"</li>
+     *   <li>{@link ViewMode#MONTHLY}: "June 2026"</li>
+     * </ul>
+     * </p>
      *
      * @return The formatted title string
      */
@@ -272,9 +293,13 @@ public class CalendarPanel extends JPanel {
     /**
      * Creates a small toggle button that switches the calendar to the given view mode.
      *
+     * <p>When clicked, this button updates the active {@link ViewMode}, adjusts the display period
+     * accordingly, and refreshes the calendar panel. The button styling includes hover effects and
+     * hand cursor indication.</p>
+     *
      * @param label The button label (e.g. "Day", "Week", "Month")
      * @param mode  The {@link ViewMode} this button activates
-     * @return A configured {@link JButton}
+     * @return A configured {@link JButton} with appropriate event listeners
      */
     private JButton createModeButton(String label, ViewMode mode) {
         JButton btn = new JButton(label);
@@ -303,10 +328,11 @@ public class CalendarPanel extends JPanel {
     /**
      * Visually highlights a mode button when its mode matches the active view mode.
      *
-     * Active buttons receive a darker background to indicate the current selection.
+     * <p>Active buttons receive a darker background colour to indicate the current selection, with
+     * white text for improved contrast.</p>
      *
-     * @param btn  The button to potentially highlight
-     * @param mode The view mode this button represents
+     * @param btn  The {@link JButton} to potentially highlight
+     * @param mode The {@link ViewMode} this button represents
      */
     private void highlightActiveMode(JButton btn, ViewMode mode) {
         if (viewMode == mode) {
@@ -318,9 +344,13 @@ public class CalendarPanel extends JPanel {
     /**
      * Navigates to the previous period based on the active view mode.
      *
-     * - DAILY:   moves back one day
-     * - WEEKLY:  moves back one week
-     * - MONTHLY: moves back one month
+     * <p>The navigation behaviour depends on the current {@link ViewMode}:
+     * <ul>
+     *   <li>{@link ViewMode#DAILY}: moves back one day</li>
+     *   <li>{@link ViewMode#WEEKLY}: moves back one week</li>
+     *   <li>{@link ViewMode#MONTHLY}: moves back one month</li>
+     * </ul>
+     * Updates the selected date and triggers the date click callback, then refreshes the panel.</p>
      */
     private void navigatePrevious() {
       switch (viewMode) {
@@ -353,9 +383,13 @@ public class CalendarPanel extends JPanel {
     /**
      * Navigates to the next period based on the active view mode.
      *
-     * - DAILY:   moves forward one day
-     * - WEEKLY:  moves forward one week
-     * - MONTHLY: moves forward one month
+     * <p>The navigation behaviour depends on the current {@link ViewMode}:
+     * <ul>
+     *   <li>{@link ViewMode#DAILY}: moves forward one day</li>
+     *   <li>{@link ViewMode#WEEKLY}: moves forward one week</li>
+     *   <li>{@link ViewMode#MONTHLY}: moves forward one month</li>
+     * </ul>
+     * Updates the selected date and triggers the date click callback, then refreshes the panel.</p>
      */
     private void navigateNext() {
       switch (viewMode) {
@@ -389,17 +423,18 @@ public class CalendarPanel extends JPanel {
     // =========================================================================
 
     /**
-     * Creates the daily view grid showing events for {@code currentDay}.
+     * Creates the daily view grid showing events for the {@code currentDay}.
      *
-     * The layout consists of 24 rows, one per hour of the day (00:00 – 23:00).
-     * Each row shows:
-     * - A hour label on the left (e.g. "08:00")
-     * - A coloured event label for each event that starts in that hour, or an
-     *   empty separator line if no events exist in that hour
+     * <p>The layout consists of 24 rows, one per hour of the day (00:00 – 23:00). Each row shows:
+     * <ul>
+     *   <li>A hour label on the left (e.g. "08:00")</li>
+     *   <li>A coloured event label for each event that starts in that hour, or an empty separator
+     *       line if no events exist in that hour</li>
+     * </ul>
+     * The panel includes a header showing the day name and date. Clicking the header selects that
+     * date and notifies the parent via callback.</p>
      *
-     * Clicking the date header selects that date and notifies the parent via callback.
-     *
-     * @return A {@link JPanel} containing the scrollable daily timeline
+     * @return A {@link JPanel} containing the scrollable daily timeline view
      */
     private JPanel createDailyGrid() {
         JPanel container = new JPanel(new BorderLayout());
@@ -486,14 +521,16 @@ public class CalendarPanel extends JPanel {
     /**
      * Creates the weekly view grid showing all seven days of the selected week.
      *
-     * The layout consists of:
-     * - A header row with one column per day (Sun – Sat), showing the date
-     * - An event area below each day header listing events for that day
+     * <p>The layout consists of:
+     * <ul>
+     *   <li>Seven columns, one per day of the week (Sunday to Saturday)</li>
+     *   <li>A header for each column with the day abbreviation and date number</li>
+     *   <li>An event area below each day header listing events for that day</li>
+     * </ul>
+     * Clicking a day header selects that date and notifies the parent via callback. Days matching
+     * today are highlighted in blue; the selected date is highlighted in light blue.</p>
      *
-     * Clicking a day header selects that date and notifies the parent via callback.
-     * Days that match today are highlighted in blue; the selected date is light blue.
-     *
-     * @return A {@link JPanel} containing the weekly grid
+     * @return A {@link JPanel} containing the weekly grid view
      */
     private JPanel createWeeklyGrid() {
         JPanel container = new JPanel(new BorderLayout());
@@ -513,16 +550,20 @@ public class CalendarPanel extends JPanel {
     /**
      * Creates a single day column for the weekly view.
      *
-     * Each column contains:
-     * - A header with the abbreviated day name and date number
-     * - A scrollable list of event labels for that day
-     *
+     * <p>Each column contains:
+     * <ul>
+     *   <li>A header with the abbreviated day name and date number</li>
+     *   <li>A scrollable list of event labels for that day</li>
+     * </ul>
      * The header background reflects the day's state:
-     * - Blue for today
-     * - Light blue for the selected date
-     * - Light grey for all other days
+     * <ul>
+     *   <li>Blue for today</li>
+     *   <li>Light blue for the selected date</li>
+     *   <li>Light grey for all other days</li>
+     * </ul>
+     * The header is clickable to select the represented day.</p>
      *
-     * @param day The date to render as a column
+     * @param day The {@link LocalDate} to render as a column
      * @return A {@link JPanel} representing one day column
      */
     private JPanel createWeekDayColumn(LocalDate day) {
@@ -543,7 +584,7 @@ public class CalendarPanel extends JPanel {
             header.setBackground(new Color(241, 245, 249)); // light grey
         }
 
-        // Abbreviated day name (e.g. "Dom", "Seg")
+        // Abbreviated day name (e.g. "Sun", "Mon")
         String abbr = day.getDayOfWeek()
                 .getDisplayName(TextStyle.SHORT, Locale.of("en", "US"));
         JLabel nameLabel = new JLabel(
@@ -605,16 +646,19 @@ public class CalendarPanel extends JPanel {
     }
 
     // =========================================================================
-    // MONTHLY VIEW (original, preserved and extended)
+    // MONTHLY VIEW
     // =========================================================================
 
     /**
      * Creates the monthly calendar grid displaying all dates of the current month.
      *
-     * The grid includes:
-     * - A header row with day-of-week abbreviations (Sun, Mon, Tue, etc.)
-     * - Day cells for each date in the month, properly aligned with the day of week
-     * - Empty cells to align the first day of the month to the correct column
+     * <p>The grid includes:
+     * <ul>
+     *   <li>A header row with day-of-week abbreviations (Sun, Mon, Tue, etc.)</li>
+     *   <li>Day cells for each date in the month, properly aligned with the day of week</li>
+     *   <li>Empty cells to align the first day of the month to the correct column</li>
+     * </ul>
+     * </p>
      *
      * @return A {@link JPanel} containing the complete monthly calendar grid
      */
@@ -661,15 +705,19 @@ public class CalendarPanel extends JPanel {
     /**
      * Creates a single date cell for the monthly calendar grid.
      *
-     * Each cell is a clickable panel that:
-     * - Displays the day-of-month number
-     * - Shows a blue background if it represents today
-     * - Shows a light blue background if it is the selected date
-     * - Displays coloured dots (one per event category) if the date has events
-     * - Invokes the date click callback when the user clicks on it
+     * <p>Each cell is a clickable panel that:
+     * <ul>
+     *   <li>Displays the day-of-month number</li>
+     *   <li>Shows a blue background if it represents today</li>
+     *   <li>Shows a light blue background if it is the selected date</li>
+     *   <li>Displays coloured dots (one per event category) if the date has events</li>
+     *   <li>Invokes the date click callback when the user clicks on it</li>
+     * </ul>
+     * </p>
      *
-     * @param date            The date to create a cell for
-     * @param datesWithEvents List of dates that have at least one scheduled event
+     * @param date            The {@link LocalDate} to create a cell for
+     * @param datesWithEvents A {@link List} of {@link LocalDate} objects that have at least one
+     *                        scheduled event
      * @return A {@link JPanel} representing a single calendar date cell
      */
     private JPanel createDateCell(LocalDate date, List<LocalDate> datesWithEvents) {

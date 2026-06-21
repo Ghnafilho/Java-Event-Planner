@@ -9,37 +9,70 @@ import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 /**
- * EventController manages all event-related operations including creation, updating,
- * deletion, and retrieval of events. This controller acts as the business logic layer
- * between the View and the data storage layer.
+ * EventController manages all event-related operations including creation, updating, deletion,
+ * and retrieval of events. This controller acts as the business logic layer between the View and
+ * the data storage layer.
  *
- * It handles:
- * - Regular single events and recurring events
- * - Event validation and persistence
- * - Attendee management
- * - Event search and filtering
- * - Event export functionality
+ * <p><strong>Architecture Pattern - MVC Controller:</strong> This class implements the Controller
+ * component of the Model-View-Controller pattern, mediating between the {@link planner.view.MainFrame}
+ * (View) and the {@link planner.model} classes (Model), while delegating persistence to
+ * {@link DataStorage}.</p>
  *
- * @author Gustavo Henrique Nogueira de Andrade Filho 
+ * <p><strong>Responsibilities:</strong></p>
+ * <ul>
+ *   <li>Regular single events and recurring events management</li>
+ *   <li>Event validation and persistence</li>
+ *   <li>Attendee management and assignment</li>
+ *   <li>Event search and filtering capabilities</li>
+ *   <li>Event export functionality to file formats</li>
+ *   <li>Data integrity through validation and error handling</li>
+ * </ul>
+ *
+ * <p><strong>Event Management:</strong> The controller maintains an in-memory list of events
+ * for fast access during runtime and uses {@link DataStorage} to persist changes to disk.
+ * All modifications go through the controller to ensure data consistency.</p>
+ *
+ * @author Gustavo Henrique Nogueira de Andrade Filho
  * @author Pedro Rocha Dantas
  * @author Leonardo Oliveira Eid
- * @version 1.0
+ * @version 2.0
+ * @see DataStorage
+ * @see planner.model.Event
+ * @see planner.model.RecurringEvent
+ * @see planner.exception.InvalidEventException
  */
 public class EventController {
     
-    // In-memory list that holds events while the program is running
+    /** In-memory list that holds events while the application is running */
     private final List<Event> events;
 
-    // Responsible for saving/loading events from file storage
+    /** Responsible for saving and loading events from file storage */
     private final DataStorage storage;
 
     /**
-     * Constructor initializes the EventController by loading all events from storage.
-     * The events are loaded into memory for faster access during the application runtime.
+     * Constructs an EventController with default storage configuration.
+     *
+     * <p>Initializes the controller by creating a default {@link DataStorage} instance and
+     * loading all events from the standard "events_data.txt" file. This is the primary
+     * constructor used for production code.</p>
      */
     public EventController() {
         this(new DataStorage());
     }
+
+    /**
+     * Constructs an EventController with a custom storage instance.
+     *
+     * <p>Initializes the controller with the provided {@link DataStorage} instance and loads
+     * all events from storage into memory. This constructor supports Dependency Injection,
+     * allowing for flexible storage backends and testable code.</p>
+     *
+     * <p><strong>Legacy Migration:</strong> If legacy recurring events without series identifiers
+     * are detected, new identifiers are automatically assigned and the updated events are saved
+     * back to storage.</p>
+     *
+     * @param storage The {@link DataStorage} instance to use for persistence operations
+     */
     public EventController(DataStorage storage) {
         this.storage = storage;
         List<Event> loadedEvents = this.storage.loadEvents();
@@ -51,24 +84,30 @@ public class EventController {
     }
 
     /**
-     * Creates a new single (non-recurring) event and saves it to storage.
+     * Creates a new single (non-recurring) event and persists it to storage.
      *
-     * The method performs the following steps:
-     * 1. Validates all input fields (title, dateTime, category)
-     * 2. Creates a new Event object
-     * 3. Adds the event to the in-memory list
-     * 4. Persists the updated events list to file storage
-     * 5. Returns the created event for further use by the caller
+     * <p><strong>Execution Steps:</strong></p>
+     * <ol>
+     *   <li>Validates all required input fields (title, dateTime, category)</li>
+     *   <li>Creates a new {@link Event} object with the provided information</li>
+     *   <li>Adds the event to the in-memory event list</li>
+     *   <li>Persists the updated event list to file storage</li>
+     *   <li>Returns the created event for further use by the caller</li>
+     * </ol>
      *
-     * @param title            The title/name of the event (non-empty string required)
-     * @param dateTime         The date and time of the event (non-null required)
-     * @param location         The physical location or venue of the event (nullable)
-     * @param description      Additional details about the event (nullable)
-     * @param category         The category/type of the event (non-empty string required)
-     * @param reminderMinutes  Number of minutes before the event to trigger a reminder
-     *
-     * @return The created Event object
-     * @throws InvalidEventException If any required field is invalid or empty
+     * @param title           The title or name of the event. Must be non-empty and non-null
+     * @param dateTime        The date and time when the event occurs. Must be non-null
+     * @param location        The physical location or venue of the event. May be {@code null} or
+     *                        empty
+     * @param description     Additional details, notes, or agenda items about the event. May be
+     *                        {@code null} or empty
+     * @param category        The category or type of the event (e.g., "Meeting", "Birthday").
+     *                        Must be non-empty and non-null
+     * @param reminderMinutes Number of minutes before the event to trigger a reminder
+     *                        notification
+     * @return The created {@link Event} object containing all provided information
+     * @throws InvalidEventException If any required field is {@code null}, empty, or contains
+     *                               only whitespace
      */
     public Event createEvent(String title, LocalDateTime dateTime, String location,
                              String description, String category, int reminderMinutes)
@@ -91,31 +130,46 @@ public class EventController {
     }
 
     /**
-     * Creates a new recurring event with specified recurrence pattern and saves it to storage.
+     * Creates a new recurring event with specified recurrence pattern and persists all
+     * occurrences to storage.
      *
-     * This method generates multiple instances of the same event based on the recurrence type
-     * and repeat count. For example, if you specify DAILY with repeat=5, it will create
-     * 5 event instances, each 1 day apart.
+     * <p><strong>Execution Logic:</strong> This method generates multiple instances of the same
+     * event based on the recurrence type and repeat count. For example, if you specify
+     * {@link RecurringEvent.RecurrenceType#DAILY} with repeat=5, it will create 5 event
+     * instances, each 1 day apart, all sharing the same series identifier.</p>
      *
-     * The method performs the following steps:
-     * 1. Validates all input fields
-     * 2. Validates the recurrence type is not NONE
-     * 3. Creates the initial recurring event
-     * 4. Generates future occurrences based on the recurrence pattern
-     * 5. Persists all instances to storage
+     * <p><strong>Execution Steps:</strong></p>
+     * <ol>
+     *   <li>Validates all required input fields</li>
+     *   <li>Validates that recurrence type is not {@link RecurringEvent.RecurrenceType#NONE}</li>
+     *   <li>Generates a unique series identifier using {@link UUID#randomUUID()}</li>
+     *   <li>Creates the initial {@link RecurringEvent} instance</li>
+     *   <li>Generates (repeat - 1) future occurrences based on the recurrence pattern</li>
+     *   <li>Persists all event instances to storage as a single atomic operation</li>
+     * </ol>
      *
-     * @param title            The title/name of the recurring event (non-empty string required)
-     * @param dateTime         The date and time of the first occurrence (non-null required)
-     * @param location         The physical location or venue (nullable)
-     * @param description      Additional event details (nullable)
-     * @param category         The category/type of the event (non-empty string required)
-     * @param reminderMinutes  Number of minutes before each occurrence to trigger a reminder
-     * @param recurrenceType   The pattern for recurrence (DAILY, WEEKLY, MONTHLY, or NONE)
-     * @param repeat           The number of times this event should repeat
-     *
-     * @return The initial RecurringEvent object that was created
-     * @throws InvalidEventException If any field is invalid, empty, or recurrence type is NONE
-     *
+     * @param title           The title or name of the recurring event. Must be non-empty and
+     *                        non-null
+     * @param dateTime        The date and time of the first occurrence. Must be non-null
+     * @param location        The physical location or venue. May be {@code null} or empty
+     * @param description     Additional event details. May be {@code null} or empty
+     * @param category        The event category. Must be non-empty and non-null
+     * @param reminderMinutes Number of minutes before each occurrence to trigger a reminder
+     * @param recurrenceType  The pattern for recurrence:
+     *                        <ul>
+     *                          <li>{@link RecurringEvent.RecurrenceType#DAILY}: Repeats every day</li>
+     *                          <li>{@link RecurringEvent.RecurrenceType#WEEKLY}: Repeats every week</li>
+     *                          <li>{@link RecurringEvent.RecurrenceType#MONTHLY}: Repeats every month</li>
+     *                          <li>{@link RecurringEvent.RecurrenceType#NONE}: Not allowed, throws
+     *                              exception</li>
+     *                        </ul>
+     * @param repeat          The number of times this event should repeat (total occurrences).
+     *                        For example, repeat=3 creates 3 events spaced according to the
+     *                        recurrence type
+     * @return The initial {@link RecurringEvent} object that was created (the first occurrence)
+     * @throws InvalidEventException If any field is invalid, empty, recurrence type is
+     *                               {@link RecurringEvent.RecurrenceType#NONE}, or repeat is not
+     *                               valid
      * @see RecurringEvent.RecurrenceType
      */
     public RecurringEvent createRecurringEvent(String title, LocalDateTime dateTime,
@@ -164,19 +218,19 @@ public class EventController {
     /**
      * Updates an existing single event with new information.
      *
-     * This method updates all fields of the given event object and persists
-     * the changes to storage. The event object is modified in-place since it's
-     * already part of the events list.
+     * <p>This method modifies all fields of the given event object in-place (since it's already
+     * part of the in-memory event list) and immediately persists the changes to storage.</p>
      *
-     * @param event           The Event object to update (must already exist in the list)
-     * @param title           The new title (non-empty string required)
-     * @param dateTime        The new date and time (non-null required)
-     * @param location        The new location (nullable)
-     * @param description     The new description (nullable)
-     * @param category        The new category (non-empty string required)
-     * @param reminderMinutes The new reminder time in minutes
-     *
-     * @throws InvalidEventException If any required field is invalid or empty
+     * @param event           The {@link Event} object to update. Must already exist in the events
+     *                        list
+     * @param title           The new title for the event. Must be non-empty and non-null
+     * @param dateTime        The new date and time. Must be non-null
+     * @param location        The new location. May be {@code null} or empty
+     * @param description     The new description. May be {@code null} or empty
+     * @param category        The new category. Must be non-empty and non-null
+     * @param reminderMinutes The new reminder time in minutes before the event
+     * @throws InvalidEventException If any required field is {@code null}, empty, or contains
+     *                               only whitespace
      */
     public void updateEvent(Event event, String title, LocalDateTime dateTime,
                             String location, String description, String category, int reminderMinutes)
@@ -200,22 +254,32 @@ public class EventController {
     /**
      * Updates all future occurrences of a recurring event starting from a specified instance.
      *
-     * This method finds all occurrences of a recurring event that happen at or after
-     * the given event's date and applies the updates to all of them. It maintains
-     * the time difference between occurrences by calculating the time shift.
+     * <p><strong>Behavior:</strong> This method finds all occurrences of the recurring event with
+     * the same series ID that happen at or after (using date/time comparison) the given event
+     * instance and applies the updates to all of them. This enables bulk editing of a recurring
+     * event series while preserving past occurrences.</p>
      *
-     * For example, if you move one occurrence forward by 1 hour, all future occurrences
-     * will also be shifted forward by 1 hour to maintain the recurring pattern.
+     * <p><strong>Time Shift Calculation:</strong> To maintain the recurring pattern when
+     * modifying dates, the method calculates the time difference between the original event's
+     * date/time and the new date/time, then applies this same shift to all future occurrences.
+     * For example, if the specified occurrence is moved forward by 1 hour, all subsequent
+     * occurrences are also shifted forward by 1 hour.</p>
      *
-     * @param event           The recurring event instance to start updating from
-     * @param title           The new title for all future occurrences
-     * @param dateTime        The new date and time for this occurrence
-     * @param location        The new location for all future occurrences
-     * @param description     The new description for all future occurrences
-     * @param category        The new category for all future occurrences
+     * @param event           The {@link RecurringEvent} instance to start updating from. This
+     *                        event and all later occurrences in the same series will be updated
+     * @param title           The new title for all future occurrences. Must be non-empty and
+     *                        non-null
+     * @param dateTime        The new date and time for this specific occurrence. The time shift
+     *                        will be applied to all future occurrences. Must be non-null
+     * @param location        The new location for all future occurrences. May be {@code null} or
+     *                        empty
+     * @param description     The new description for all future occurrences. May be {@code null}
+     *                        or empty
+     * @param category        The new category for all future occurrences. Must be non-empty and
+     *                        non-null
      * @param reminderMinutes The new reminder time for all future occurrences
-     *
-     * @throws InvalidEventException If any required field is invalid or empty
+     * @throws InvalidEventException If any required field is {@code null}, empty, or contains
+     *                               only whitespace
      */
     public void updateFutureOccurrences(RecurringEvent event, String title,
                                         LocalDateTime dateTime, String location, String description,
@@ -246,11 +310,12 @@ public class EventController {
     /**
      * Deletes a single event from the system.
      *
-     * Removes the event from the in-memory list and persists the updated
-     * list to storage. If the event is a recurring event, only that specific
-     * occurrence is deleted (to delete all future occurrences, use deleteFutureOccurrences).
+     * <p>Removes the event from the in-memory list and persists the updated list to storage.
+     * If the event is a recurring event, only that specific occurrence is deleted. To delete
+     * all future occurrences of a recurring event, use
+     * {@link #deleteFutureOccurrences(RecurringEvent)}.</p>
      *
-     * @param event The Event object to delete (must exist in the events list)
+     * @param event The {@link Event} object to delete. Must exist in the events list
      */
     public void deleteEvent(Event event) {
         // Remove the event from the in-memory list
@@ -262,13 +327,16 @@ public class EventController {
     /**
      * Deletes all future occurrences of a recurring event starting from a specified instance.
      *
-     * This method removes the specified occurrence and all subsequent occurrences
-     * of the same recurring event, while preserving past occurrences.
+     * <p>This method removes the specified occurrence and all subsequent occurrences of the same
+     * recurring event (identified by matching series ID), while preserving past occurrences that
+     * happen before the specified event.</p>
      *
-     * For example, if a daily event is scheduled for 10 days and you call this method
-     * on day 5, it will delete occurrences 5-10 but keep occurrences 1-4.
+     * <p><strong>Example:</strong> If a daily event is scheduled for 10 consecutive days and
+     * you call this method on day 5, occurrences 5-10 are deleted while occurrences 1-4 are
+     * preserved.</p>
      *
-     * @param event The recurring event instance to start deleting from
+     * @param event The {@link RecurringEvent} instance to start deleting from. This event and
+     *              all later occurrences in the same series will be removed
      */
     public void deleteFutureOccurrences(RecurringEvent event) {
         events.removeIf(e -> isSameSeriesOccurrence(event, e));
@@ -279,13 +347,14 @@ public class EventController {
     /**
      * Retrieves all events scheduled for a specific date.
      *
-     * This method filters all events by the given date (ignoring time of day)
-     * and returns them sorted chronologically by time.
+     * <p>Filters all events by the given date (ignoring time of day) and returns them sorted
+     * chronologically by time of day. This is commonly used by the calendar view to display
+     * all events for a selected date.</p>
      *
-     * @param date The date to retrieve events for
-     *
-     * @return A list of Event objects scheduled for the given date, sorted by time.
-     *         Returns an empty list if no events are found for that date.
+     * @param date The {@link LocalDate} to retrieve events for
+     * @return A {@link List} of {@link Event} objects scheduled for the given date, sorted by
+     *         time of day in ascending order. Returns an empty list if no events are scheduled
+     *         for that date
      */
     public List<Event> getEventsForDate(LocalDate date) {
         return events.stream()
@@ -299,15 +368,15 @@ public class EventController {
     /**
      * Retrieves all distinct dates in a specific month that have at least one event.
      *
-     * This method is useful for calendar views where you need to highlight which
-     * days have scheduled events.
+     * <p>Returns a list of unique {@link LocalDate} objects representing each day in the
+     * specified month that has one or more scheduled events. This is particularly useful for
+     * calendar UI components that need to highlight or mark days with events.</p>
      *
-     * @param year  The year (e.g., 2024)
-     * @param month The month as an integer (1-12, where 1 is January)
-     *
-     * @return A list of distinct LocalDate objects for each day in the specified month
-     *         that has at least one event. Returns an empty list if no events exist
-     *         in that month.
+     * @param year  The year (e.g., 2024, 2025)
+     * @param month The month as an integer (1-12, where 1 is January and 12 is December)
+     * @return A {@link List} of distinct {@link LocalDate} objects for each day in the specified
+     *         month that has at least one event. Returns an empty list if no events exist in
+     *         that month
      */
     public List<LocalDate> getDatesWithEventsInMonth(int year, int month) {
         return events.stream()
@@ -321,15 +390,25 @@ public class EventController {
     }
 
     /**
-     * Searches for events matching a keyword in their title, location, description, or category.
+     * Searches for events matching a keyword in multiple fields.
      *
-     * The search is case-insensitive and returns all events where the keyword is found
-     * in any of the searchable fields.
+     * <p><strong>Search Scope:</strong> The search is case-insensitive and looks for substring
+     * matches in the following event fields:
+     * <ul>
+     *   <li>Event title</li>
+     *   <li>Event location</li>
+     *   <li>Event description</li>
+     *   <li>Event category</li>
+     * </ul>
      *
-     * @param keyword The search term to look for (case-insensitive substring match)
+     * <p>An event matches if the keyword appears in any of these fields, allowing flexible
+     * searches across multiple aspects of events.</p>
      *
-     * @return A list of Event objects that match the search criteria.
-     *         Returns an empty list if no matches are found.
+     * @param keyword The search term to look for. The search is case-insensitive and finds
+     *                substring matches
+     * @return A {@link List} of {@link Event} objects that match the search criteria. Returns
+     *         an empty list if no events match the keyword or if the keyword is
+     *         {@code null}/empty
      */
     public List<Event> searchEvents(String keyword) {
         // Convert keyword to lowercase for case-insensitive comparison
@@ -348,14 +427,15 @@ public class EventController {
     /**
      * Adds a single attendee to an event.
      *
-     * This method validates the attendee information and adds them to the event's
-     * attendee list. The attendee information is then persisted to storage.
+     * <p>Validates the attendee information (name and email) and adds a new {@link Attendee}
+     * object to the event's attendee list. The changes are immediately persisted to storage.</p>
      *
-     * @param event The Event object to add the attendee to
-     * @param name  The full name of the attendee (non-empty string required)
-     * @param email The email address of the attendee (must contain "@" symbol)
-     *
-     * @throws InvalidEventException If the name is empty or the email is invalid
+     * @param event The {@link Event} object to add the attendee to
+     * @param name  The full name of the attendee. Must be non-empty after trimming whitespace
+     * @param email The email address of the attendee. Must contain the "@" symbol for basic
+     *              validation
+     * @throws InvalidEventException If the name is empty or the email is invalid (missing "@"
+     *                               symbol)
      */
     public void addAttendee(Event event, String name, String email)
             throws InvalidEventException {
@@ -379,14 +459,18 @@ public class EventController {
     /**
      * Adds a single attendee to all future occurrences of a recurring event.
      *
-     * This method finds all occurrences of the recurring event that happen at or after
-     * the specified event instance and adds the attendee to each of them.
+     * <p>Finds all occurrences of the recurring event with the same series ID that happen at or
+     * after the specified event instance and adds the same attendee to each of them. This enables
+     * bulk attendee assignment for a recurring event series.</p>
      *
-     * @param event The recurring event instance to start adding attendees from
-     * @param name  The full name of the attendee (non-empty string required)
-     * @param email The email address of the attendee (must contain "@" symbol)
-     *
-     * @throws InvalidEventException If the name is empty or the email is invalid
+     * @param event The {@link RecurringEvent} instance to start adding attendees from. This
+     *              event and all later occurrences in the same series will have the attendee
+     *              added
+     * @param name  The full name of the attendee. Must be non-empty after trimming whitespace
+     * @param email The email address of the attendee. Must contain the "@" symbol for basic
+     *              validation
+     * @throws InvalidEventException If the name is empty or the email is invalid (missing "@"
+     *                               symbol)
      */
     public void addAttendeeToFutureOccurrences(
             RecurringEvent event,
@@ -415,18 +499,34 @@ public class EventController {
     }
 
     /**
-     * Exports all events for a specific day to a text file.
+     * Exports all events for a specific day to a formatted text file.
      *
-     * The exported file contains a formatted list of events with title, time, location,
-     * and category information. If no events exist for the day, the file will indicate
-     * that there are no events.
+     * <p>Creates a new file at the specified path containing a formatted list of all events
+     * scheduled for the given date. Each event's title, formatted date/time, location, and
+     * category are written to the file. If no events exist for the day, the file will indicate
+     * that no events are scheduled.</p>
      *
-     * @param date     The date to export events for
-     * @param filePath The file path where the export should be saved
-     *                 (e.g., "/tmp/events_2024-01-15.txt" or "C:\\exports\\events.txt")
+     * <p><strong>File Format:</strong> The exported file includes:
+     * <ul>
+     *   <li>Header with the date</li>
+     *   <li>Formatted event entries with title, time, location, and category</li>
+     *   <li>Separator lines for readability</li>
+     *   <li>Message if no events are scheduled</li>
+     * </ul>
      *
-     * @throws java.io.IOException If there is an error writing to the file
-     *         (e.g., invalid path, insufficient permissions)
+     * @param date     The {@link LocalDate} to export events for
+     * @param filePath The file path where the export should be saved. Examples:
+     *                 <ul>
+     *                   <li>Unix/Linux: "/tmp/events_2024-01-15.txt"</li>
+     *                   <li>Windows: "C:\\exports\\events.txt"</li>
+     *                   <li>Relative: "./exports/events_today.txt"</li>
+     *                 </ul>
+     * @throws java.io.IOException If there is an error writing to the file, such as:
+     *                             <ul>
+     *                               <li>Invalid file path</li>
+     *                               <li>Insufficient permissions to write to the directory</li>
+     *                               <li>Disk space issues</li>
+     *                             </ul>
      */
     public void exportDayToFile(LocalDate date, String filePath) throws java.io.IOException {
         // Retrieve all events for the specified date
@@ -457,16 +557,24 @@ public class EventController {
     }
 
     /**
-     * Validates that required event fields are not null and not empty.
+     * Checks if a candidate event belongs to the same recurring series and occurs at or after
+     * the reference event.
      *
-     * This is an internal validation method used by event creation and update methods
-     * to ensure data integrity before persisting to storage.
+     * <p><strong>Matching Criteria:</strong> An event matches if:
+     * <ul>
+     *   <li>It is an instance of {@link RecurringEvent}</li>
+     *   <li>It has the same series ID as the reference event</li>
+     *   <li>Its date/time is equal to or after the reference event's date/time</li>
+     * </ul>
+     * </p>
      *
-     * @param title    The event title to validate
-     * @param dateTime The event date and time to validate
-     * @param category The event category to validate
+     * <p>This helper method is used internally by update and delete operations to identify
+     * which occurrences should be modified or removed when managing recurring events.</p>
      *
-     * @throws InvalidEventException If any required field is null, empty, or contains only whitespace
+     * @param reference The reference {@link RecurringEvent} to compare against
+     * @param candidate The {@link Event} to check for series membership and date comparison
+     * @return {@code true} if the candidate is part of the same series and occurs at or after
+     *         the reference event, {@code false} otherwise
      */
     private boolean isSameSeriesOccurrence(RecurringEvent reference, Event candidate) {
         if (!(candidate instanceof RecurringEvent recurringCandidate)) {
@@ -478,6 +586,19 @@ public class EventController {
                 && !candidate.getDateTime().isBefore(reference.getDateTime());
     }
 
+    /**
+     * Validates that all required event fields contain valid, non-empty values.
+     *
+     * <p>This internal validation method is used by event creation and update methods to ensure
+     * data integrity before persisting changes to storage. It checks that required fields are
+     * not {@code null}, not empty strings, and not whitespace-only strings.</p>
+     *
+     * @param title    The event title to validate
+     * @param dateTime The event date and time to validate
+     * @param category The event category to validate
+     * @throws InvalidEventException If any required field is {@code null}, empty, or contains
+     *                               only whitespace characters
+     */
     private void validateEventFields(String title, LocalDateTime dateTime, String category)
             throws InvalidEventException {
 
@@ -498,12 +619,16 @@ public class EventController {
     /**
      * Retrieves a copy of all events currently stored in the system.
      *
-     * This method returns a copy of the internal events list to prevent external
-     * code from directly modifying the controller's internal state. Always use the
-     * update and delete methods to make changes to events.
+     * <p>Returns a new {@link ArrayList} containing all {@link Event} objects in the controller.
+     * By returning a copy rather than a direct reference to the internal list, this method
+     * prevents external code from directly modifying the controller's internal state. All
+     * modifications should go through the controller's dedicated methods like
+     * {@link #updateEvent(Event, String, LocalDateTime, String, String, String, int)},
+     * {@link #deleteEvent(Event)}, and {@link #addAttendee(Event, String, String)}.</p>
      *
-     * @return A new ArrayList containing all Event objects in the system.
-     *         Returns an empty list if no events exist.
+     * @return A new {@link ArrayList} containing copies of all {@link Event} objects in the
+     *         system. Returns an empty list if no events exist. Modifications to the returned
+     *         list do not affect the controller's internal state
      */
     public List<Event> getAllEvents() {
         return new ArrayList<>(events);

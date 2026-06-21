@@ -12,46 +12,56 @@ import java.util.List;
 /**
  * MainFrame is the primary user interface for the Event Planner application.
  *
- * This frame provides:
- * - A calendar view on the left side for month navigation and date selection
- * - An event list on the right side showing all events for the selected date
- * - Event details display with attendee information
- * - Event management capabilities (create, edit, delete, add attendees)
- * - Search functionality to find events by keyword
- * - Export functionality to save events to a text file
+ * <p><strong>Overview:</strong> This frame provides a comprehensive interface for event management,
+ * featuring a dual-panel layout with calendar navigation on the left and event management controls
+ * on the right.</p>
  *
- * The main components are arranged in a split pane layout with the calendar
- * on the left and event management panel on the right.
+ * <p><strong>Features:</strong></p>
+ * <ul>
+ *   <li>Calendar view on the left side for month/week/day navigation and date selection</li>
+ *   <li>Event list on the right side showing all events for the selected date</li>
+ *   <li>Event details display with comprehensive information including attendees</li>
+ *   <li>Event management capabilities (create, edit, delete, add attendees)</li>
+ *   <li>Support for recurring events with granular control over modifications</li>
+ *   <li>Search functionality to find events by keyword across multiple fields</li>
+ *   <li>Export functionality to save events to a text file</li>
+ *   <li>Toolbar with quick-access buttons and search controls</li>
+ * </ul>
  *
- * @author Gustavo Henrique Nogueira de Andrade Filho 
+ * <p><strong>Layout Structure:</strong> The main components are arranged in a split pane layout
+ * with the calendar on the left and the event management panel on the right. The top toolbar
+ * provides quick access to common operations.</p>
+ *
+ * @author Gustavo Henrique Nogueira de Andrade Filho
  * @author Pedro Rocha Dantas
  * @author Leonardo Oliveira Eid
- * @version 1.0
+ * @version 2.0
  */
 public class MainFrame extends JFrame {
 
     // Reference to the event controller for all event operations
     private final EventController controller;
-    // Calendar panel component for date selection
+    // Calendar panel component for date selection and navigation
     private final CalendarPanel calendarPanel;
 
     // Event list component showing events for the selected date
     private JList<Event> eventList;
-    // Model backing the event list
+    // Model backing the event list for dynamic updates
     private DefaultListModel<Event> eventListModel;
-    // Text area for displaying selected event details
+    // Text area for displaying detailed information about the selected event
     private JTextArea detailsArea;
     // Currently selected date
     private LocalDate selectedDate = LocalDate.now();
 
     /**
-     * Constructs the main application window.
+     * Constructs the main application window with all UI components.
      *
-     * Initializes all UI components, sets up the calendar panel and event list,
-     * and displays events for today's date. The window is centered on the screen
-     * and configured to exit the application when closed.
+     * <p>Initializes all UI components, sets up the calendar panel and event list, and displays
+     * events for today's date. The window is centered on the screen and configured to exit the
+     * application when closed.</p>
      *
-     * @param controller The EventController instance for managing events
+     * @param controller The {@link EventController} instance for managing events and retrieving
+     *                   event data
      */
     public MainFrame(EventController controller) {
         this.controller = controller;
@@ -67,11 +77,14 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * Initializes the main user interface.
+     * Initializes the main user interface structure.
      *
-     * Sets up the frame layout with:
-     * - A top toolbar with action buttons
-     * - A central split pane with calendar and event management panels
+     * <p>Sets up the frame layout with:
+     * <ul>
+     *   <li>A top toolbar with action buttons and search functionality</li>
+     *   <li>A central split pane with the calendar and event management panels</li>
+     * </ul>
+     * </p>
      */
     private void initializeUI() {
         setLayout(new BorderLayout());
@@ -83,13 +96,15 @@ public class MainFrame extends JFrame {
     /**
      * Creates the top toolbar containing action buttons and search functionality.
      *
-     * The toolbar includes:
-     * - "New Event" button to create a new event
-     * - "Today" button to navigate back to current date
-     * - "Export Day" button to save events to a file
-     * - Search field and button to find events by keyword
+     * <p>The toolbar includes:</p>
+     * <ul>
+     *   <li>"New Event" button to create a new event</li>
+     *   <li>"Today" button to navigate back to the current date</li>
+     *   <li>"Export Day" button to save events for the selected date to a file</li>
+     *   <li>Search field and button to find events by keyword</li>
+     * </ul>
      *
-     * @return A JPanel containing the toolbar with all controls
+     * @return A {@link JPanel} containing the toolbar with all controls and appropriate spacing
      */
     private JPanel createTopToolbar() {
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
@@ -131,13 +146,14 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * Creates the central split pane dividing the calendar and event panel.
+     * Creates the central split pane dividing the calendar and event management panel.
      *
-     * The left side contains the calendar for date selection.
-     * The right side contains the event list and details.
-     * The divider can be moved to adjust the relative sizes of both panels.
+     * <p>The left side contains the calendar component for date selection and navigation.
+     * The right side contains the event list and detailed event information.
+     * The divider can be moved to adjust the relative sizes of both panels, with a default
+     * split of 40% calendar and 60% event panel.</p>
      *
-     * @return A JSplitPane with the calendar on the left and event panel on the right
+     * @return A {@link JSplitPane} with the calendar on the left and event panel on the right
      */
     private JSplitPane createCentralPanel() {
         // Set up calendar to notify this frame when a date is clicked
@@ -158,14 +174,19 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * Creates the right panel containing the event list, details, and action buttons.
+     * Creates the right panel containing the event list, details display, and action buttons.
      *
-     * This panel displays:
-     * - A list of events for the selected date
-     * - Detailed information about the selected event
-     * - Action buttons for editing, deleting, and adding attendees
+     * <p>This panel displays:</p>
+     * <ul>
+     *   <li>A scrollable list of events for the selected date</li>
+     *   <li>Detailed information about the selected event (title, time, location, etc.)</li>
+     *   <li>Action buttons for editing, deleting, and adding attendees to events</li>
+     * </ul>
      *
-     * @return A JPanel containing the event list and action controls
+     * <p>The panel uses a {@link BorderLayout} to organize components vertically, with the event
+     * list at the top, details and action buttons at the bottom.</p>
+     *
+     * @return A {@link JPanel} containing the event list, details area, and action controls
      */
     private JPanel createRightPanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 8));
@@ -233,10 +254,10 @@ public class MainFrame extends JFrame {
     /**
      * Updates the event list to show all events for the specified date.
      *
-     * Clears the current list and populates it with events from the controller.
-     * Clears the details area when refreshing the list.
+     * <p>Clears the current list and populates it with events retrieved from the controller for
+     * the given date. The details area is cleared when refreshing the list.</p>
      *
-     * @param date The date to retrieve events for
+     * @param date The {@link LocalDate} to retrieve events for
      */
     private void updateEventList(LocalDate date) {
         eventListModel.clear();
@@ -248,12 +269,22 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * Displays detailed information about the selected event.
+     * Displays detailed information about the selected event in the details area.
      *
-     * Shows event title, date/time, location, category, description, reminder time,
-     * recurrence type (if applicable), and list of attendees.
+     * <p>Shows comprehensive event information including:</p>
+     * <ul>
+     *   <li>Title</li>
+     *   <li>Date and time</li>
+     *   <li>Location</li>
+     *   <li>Category</li>
+     *   <li>Description</li>
+     *   <li>Reminder time (in minutes before the event)</li>
+     *   <li>Recurrence type (if the event is recurring)</li>
+     *   <li>List of attendees (if any have been added)</li>
+     * </ul>
      *
-     * @param event The Event object to display details for (null clears the display)
+     * @param event The {@link Event} object to display details for, or {@code null} to clear the
+     *              display
      */
     private void displayEventDetails(Event event) {
         // If no event selected, clear the display
@@ -285,10 +316,24 @@ public class MainFrame extends JFrame {
         detailsArea.setText(detailsBuilder.toString());
     }
 
+    /**
+     * Opens the event creation dialog and creates a new event from the submitted form data.
+     *
+     * <p>Displays a modal dialog for entering event details. If the user submits valid data,
+     * a new event (either regular or recurring) is created via the controller, and the UI is
+     * refreshed to display the new event.</p>
+     */
     private void openNewEventForm() {
         EventFormDialog.showCreateDialog(this).ifPresent(this::createEventFromForm);
     }
 
+    /**
+     * Opens the event editing dialog for the selected event and updates it with the submitted
+     * form data.
+     *
+     * <p>If no event is selected, displays an error message. For recurring events, prompts the
+     * user to choose whether to update only the selected occurrence or all future occurrences.</p>
+     */
     private void editSelectedEvent() {
         Event selectedEvent = eventList.getSelectedValue();
         if (selectedEvent == null) {
@@ -299,6 +344,15 @@ public class MainFrame extends JFrame {
                 updateEventFromForm(selectedEvent, data));
     }
 
+    /**
+     * Creates a new event from the submitted form data.
+     *
+     * <p>Handles both regular and recurring event creation based on the form data. If the event
+     * data indicates recurrence, a {@link RecurringEvent} is created; otherwise, a regular
+     * {@link Event} is created. Updates the UI upon successful creation.</p>
+     *
+     * @param data The {@link EventFormDialog.EventFormData} containing form submission data
+     */
     private void createEventFromForm(EventFormDialog.EventFormData data) {
         try {
             if (data.isRecurring()) {
@@ -316,6 +370,16 @@ public class MainFrame extends JFrame {
         }
     }
 
+    /**
+     * Updates an existing event with data from the submitted form.
+     *
+     * <p>For recurring events, prompts the user to choose whether to update only the current
+     * occurrence or all future occurrences. For regular events, updates the event directly.
+     * Handles validation errors and refreshes the UI upon successful update.</p>
+     *
+     * @param existingEvent The {@link Event} object to be updated
+     * @param data The {@link EventFormDialog.EventFormData} containing updated form data
+     */
     private void updateEventFromForm(Event existingEvent, EventFormDialog.EventFormData data) {
         try {
             if (existingEvent instanceof RecurringEvent recurringEvent) {
@@ -343,11 +407,22 @@ public class MainFrame extends JFrame {
         }
     }
 
+    /**
+     * Refreshes the calendar and event list after a change.
+     *
+     * <p>Called after creating, updating, or deleting events to ensure the UI reflects the
+     * current state of the data.</p>
+     */
     private void refreshAfterChange() {
         calendarPanel.refresh();
         updateEventList(selectedDate);
     }
 
+    /**
+     * Displays a validation error message to the user.
+     *
+     * @param ex The {@link InvalidEventException} containing the error message
+     */
     private void showValidationError(InvalidEventException ex) {
         JOptionPane.showMessageDialog(this, ex.getMessage(),
                 "Validation Error", JOptionPane.ERROR_MESSAGE);
@@ -356,9 +431,9 @@ public class MainFrame extends JFrame {
     /**
      * Deletes the currently selected event.
      *
-     * For recurring events, prompts the user to choose whether to delete only
-     * this occurrence or this and all future occurrences.
-     * For single events, requests confirmation before deletion.
+     * <p>For recurring events, prompts the user to choose whether to delete only the current
+     * occurrence or this occurrence and all future occurrences. For regular events, requests
+     * confirmation before deletion. Updates the UI upon successful deletion.</p>
      */
     private void deleteSelectedEvent() {
         Event selectedEvent = eventList.getSelectedValue();
@@ -402,9 +477,9 @@ public class MainFrame extends JFrame {
     /**
      * Opens a dialog to add an attendee to the selected event.
      *
-     * Prompts the user for attendee name and email. For recurring events,
-     * allows the user to choose whether to add the attendee to only this
-     * occurrence or to this and all future occurrences.
+     * <p>Prompts the user for attendee name and email. For recurring events, allows the user to
+     * choose whether to add the attendee to only the current occurrence or to this and all future
+     * occurrences. Updates the UI upon successful addition.</p>
      */
     private void addAttendee() {
         Event selectedEvent = eventList.getSelectedValue();
@@ -473,11 +548,12 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * Searches for events matching the given keyword.
+     * Searches for events matching the given keyword across multiple fields.
      *
-     * The search looks for matches in event title, location, description, and category.
-     * Results are displayed in the event list. If the search field is empty,
-     * the list returns to showing events for the selected date.
+     * <p>The search looks for matches in event title, location, description, and category.
+     * Results are displayed in the event list and the number of matches is shown in the details
+     * area. If the search field is empty, the list returns to showing events for the currently
+     * selected date.</p>
      *
      * @param keyword The search term to find in events
      */
@@ -498,9 +574,12 @@ public class MainFrame extends JFrame {
     /**
      * Exports all events for the currently selected date to a text file.
      *
-     * Prompts the user to select a file location and name, then saves
-     * the day's events in a formatted text file. Shows confirmation
-     * or error message based on the result.
+     * <p>Displays a file chooser dialog for the user to select the destination path and filename.
+     * Once the user confirms the selection, events are saved to the specified file in a formatted
+     * text format. Shows a confirmation message upon successful export or an error message if
+     * the operation fails.</p>
+     *
+     * @throws java.io.IOException If an error occurs while writing to the file
      */
     private void exportDay() {
         // Create file chooser dialog

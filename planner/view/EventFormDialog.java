@@ -14,21 +14,40 @@ import java.util.Optional;
 
 
 /**
- * Description:
- * Reusable dialog component responsible for collecting event information
+ * EventFormDialog is a reusable dialog component responsible for collecting event information
  * from the user through a graphical form.
  *
- * Applied Design Principle - SEPARATION OF CONCERNS:
- * Centralizes all event form creation, user input collection, and date parsing
- * logic in a single component. This prevents code duplication and keeps the
- * MainFrame class focused on application workflow and user interaction.
+ * <p><strong>Design Principles:</strong></p>
+ * <ul>
+ *   <li><strong>Separation of Concerns:</strong> Centralizes all event form creation, user input
+ *       collection, and date parsing logic in a single component. This prevents code duplication
+ *       and keeps the MainFrame class focused on application workflow and user interaction.</li>
+ *   <li><strong>MVC Architecture:</strong> This class belongs to the View layer and is responsible
+ *       only for presenting and collecting data. Business rules and validation remain delegated to
+ *       the Controller and Model layers.</li>
+ * </ul>
  *
- * Applied Architecture - MVC:
- * This class belongs to the View layer and is responsible only for presenting
- * and collecting data. Business rules and validation remain delegated to the
- * Controller and Model layers.
+ * <p><strong>Validation Behaviour:</strong></p>
+ * <ul>
+ *   <li>The dialog remains open until the user provides valid input or cancels.</li>
+ *   <li>If validation fails, an error message is displayed and the form is shown again with all
+ *       previously entered values preserved.</li>
+ *   <li>The title field is mandatory and cannot be empty.</li>
+ *   <li>The date/time field must follow the format "MM/dd/yyyy HH:mm".</li>
+ * </ul>
+ *
+ * <p><strong>Recurrence Behaviour:</strong></p>
+ * <ul>
+ *   <li>When creating a new event, recurrence options are available.</li>
+ *   <li>The repetitions field is dynamically shown only when a recurrence type other than
+ *       "No recurrence" is selected.</li>
+ * </ul>
+ *
+ * @author Gustavo Henrique Nogueira de Andrade Filho
+ * @author Pedro Rocha Dantas
+ * @author Leonardo Oliveira Eid
+ * @version 2.0
  */
-
 public final class EventFormDialog {
 
     private static final String DATE_PLACEHOLDER = "MM/dd/yyyy HH:mm";
@@ -40,18 +59,30 @@ public final class EventFormDialog {
             {"Meeting", "Birthday", "Appointment", "Reminder", "Other"};
 
 
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
     private EventFormDialog() {}
 
     /**
-     * Immutable data transfer object (DTO) used to transport
-     * form values collected from the user interface.
+     * Immutable data transfer object (DTO) used to transport form values collected from the
+     * user interface.
      *
-     * Applied OOP Concept - ENCAPSULATION:
-     * The Java Record feature automatically generates accessors and
-     * guarantees immutability after object creation, preventing accidental
-     * modification of user input data.
+     * <p><strong>Design Pattern - Encapsulation:</strong> The Java Record feature automatically
+     * generates accessors and guarantees immutability after object creation, preventing accidental
+     * modification of user input data.</p>
+     *
+     * @param title The event title (mandatory, non-empty)
+     * @param dateTime The event date and time in the format "MM/dd/yyyy HH:mm"
+     * @param location The event location (optional)
+     * @param description The event description (optional)
+     * @param category The event category (e.g., "Meeting", "Birthday", "Appointment", "Reminder",
+     *                 "Other")
+     * @param reminderMinutes The number of minutes before the event to display a reminder
+     * @param recurrenceType The type of recurrence for this event
+     * @param repetitions The number of times the event should repeat (only applicable when
+     *                    recurrence is enabled)
      */
-
     public record EventFormData(
             String title,
             LocalDateTime dateTime,
@@ -62,6 +93,11 @@ public final class EventFormDialog {
             RecurringEvent.RecurrenceType recurrenceType,
             int repetitions
     ) {
+        /**
+         * Checks whether this event has a recurrence type other than NONE.
+         *
+         * @return {@code true} if the event is recurring, {@code false} otherwise
+         */
         public boolean isRecurring() {
             return recurrenceType != null
                     && recurrenceType != RecurringEvent.RecurrenceType.NONE;
@@ -72,9 +108,14 @@ public final class EventFormDialog {
     /**
      * Displays a dialog for creating a new event.
      *
-     * @param parent The parent component where the dialog will be displayed
-     * @return An Optional containing the collected form data if successful,
-     *         or empty if the dialog is cancelled.
+     * <p>This is a convenience method that calls {@link #showDialog(Component, Event, boolean)}
+     * with {@code existingEvent} set to {@code null} and {@code includeRecurrence} set to
+     * {@code true}.</p>
+     *
+     * @param parent The parent {@link Component} where the dialog will be displayed
+     * @return An {@link Optional} containing the collected {@link EventFormData} if the user
+     *         successfully completes the form, or an empty {@link Optional} if the dialog is
+     *         cancelled
      */
     public static Optional<EventFormData> showCreateDialog(Component parent) {
         return showDialog(parent, null, true);
@@ -84,10 +125,15 @@ public final class EventFormDialog {
     /**
      * Displays a dialog for editing an existing event.
      *
-     * @param parent The parent component where the dialog will be displayed
-     * @param existingEvent The Event object to be edited
-     * @return An Optional containing the collected form data if successful,
-     *         or empty if the dialog is cancelled.
+     * <p>This is a convenience method that calls {@link #showDialog(Component, Event, boolean)}
+     * with {@code existingEvent} set to the provided event and {@code includeRecurrence} set to
+     * {@code false}. The form fields are populated with the existing event's data.</p>
+     *
+     * @param parent The parent {@link Component} where the dialog will be displayed
+     * @param existingEvent The {@link Event} object to be edited
+     * @return An {@link Optional} containing the collected {@link EventFormData} if the user
+     *         successfully completes the form, or an empty {@link Optional} if the dialog is
+     *         cancelled
      */
     public static Optional<EventFormData> showEditDialog(Component parent, Event existingEvent) {
         return showDialog(parent, existingEvent, false);
@@ -95,29 +141,56 @@ public final class EventFormDialog {
 
 
     /**
-    * Displays a dialog for creating or editing an event.
-    *
-    * Validation Behaviour:
-    * * The dialog remains open until the user provides valid input or cancels.
-    * * If validation fails, an error message is displayed and the form is shown
-    * again with all previously entered values preserved.
-    * * The title field is mandatory and cannot be empty.
-    * * The date/time field must follow the format "MM/dd/yyyy HH:mm".
-    *
-    * Recurrence Behaviour:
-    * * When creating a new event, recurrence options are available.
-    * * The repetitions field is dynamically shown only when a recurrence type
-    * other than "No recurrence" is selected.
-    *
-    * @param parent The parent component where the dialog will be displayed
-    * @param existingEvent The Event object to be edited (null for new events)
-    * @param includeRecurrence Whether recurrence controls should be displayed
-    * @return An Optional containing the collected form data when validation
-        succeeds, or an empty Optional if the user cancels the operation.
-
-
-    */
-        private static Optional<EventFormData> showDialog(
+     * Displays a dialog for creating or editing an event with form validation and error handling.
+     *
+     * <p>This method creates and manages a modal dialog containing input fields for event
+     * information. The dialog remains visible until the user either submits valid data or
+     * cancels the operation.</p>
+     *
+     * <p><strong>Form Fields:</strong></p>
+     * <ul>
+     *   <li><strong>Title:</strong> Required text field; cannot be empty</li>
+     *   <li><strong>Date/Time:</strong> Required field in format "MM/dd/yyyy HH:mm"</li>
+     *   <li><strong>Location:</strong> Optional text field</li>
+     *   <li><strong>Category:</strong> Dropdown menu with predefined categories</li>
+     *   <li><strong>Reminder:</strong> Spinner for minutes before event notification</li>
+     *   <li><strong>Recurrence:</strong> Dropdown menu (only shown when creating new events)</li>
+     *   <li><strong>Repetitions:</strong> Spinner for recurrence count (only shown when recurrence
+     *       type is selected)</li>
+     *   <li><strong>Description:</strong> Optional text area for additional details</li>
+     * </ul>
+     *
+     * <p><strong>Validation Logic:</strong></p>
+     * <ul>
+     *   <li>Title must not be empty or whitespace-only</li>
+     *   <li>Date/Time must follow the format "MM/dd/yyyy HH:mm"</li>
+     *   <li>If validation fails, an error dialog is shown and the form reappears with user input
+     *       preserved</li>
+     * </ul>
+     *
+     * <p><strong>Recurrence Handling:</strong></p>
+     * <ul>
+     *   <li>When {@code includeRecurrence} is {@code true}, recurrence controls are displayed</li>
+     *   <li>The "Repetitions" field visibility is toggled based on the selected recurrence type</li>
+     *   <li>When creating new events, full recurrence support is available</li>
+     *   <li>When editing existing events, recurrence controls are hidden</li>
+     * </ul>
+     *
+     * @param parent The parent {@link Component} where the dialog will be displayed. Used to
+     *               position the dialog relative to the parent window
+     * @param existingEvent The {@link Event} object to be edited, or {@code null} if creating a
+     *                      new event. When provided, all form fields are populated with the
+     *                      event's existing data
+     * @param includeRecurrence Whether recurrence control fields should be included in the dialog.
+     *                          Should be {@code true} for new events and {@code false} for
+     *                          editing existing events
+     * @return An {@link Optional} containing the collected {@link EventFormData} when the user
+     *         successfully submits the form, or an empty {@link Optional} if the user cancels
+     *         the dialog
+     * @throws DateTimeParseException If the entered date/time string does not match the required
+     *                               format (caught and re-displayed as a user-friendly error)
+     */
+    private static Optional<EventFormData> showDialog(
         Component parent,
         Event existingEvent,
         boolean includeRecurrence) {
@@ -288,10 +361,15 @@ public final class EventFormDialog {
 
 
     /**
-     * Creates a JTextField with a placeholder and focus listener
-     * for date/time input.
+     * Creates a {@link JTextField} configured for date/time input with placeholder text and
+     * automatic focus management.
      *
-     * @return A JTextField configured for date/time input
+     * <p>The field displays a placeholder text when empty and unfocused. When the user focuses
+     * on the field, the placeholder is cleared to allow input. If the field loses focus without
+     * input, the placeholder is restored.</p>
+     *
+     * @return A {@link JTextField} configured with placeholder behaviour and focus listeners for
+     *         date/time input
      */
     private static JTextField createDateTimeField() {
         JTextField field = new JTextField(DATE_PLACEHOLDER, 20);
@@ -316,10 +394,23 @@ public final class EventFormDialog {
 
 
     /**
-     * Parses a recurrence type string into a RecurringEvent.RecurrenceType enum value.
+     * Parses a recurrence type string into its corresponding {@link RecurringEvent.RecurrenceType}
+     * enum value.
      *
-     * @param recurrenceString The string representation of the recurrence type
-     * @return The corresponding RecurringEvent.RecurrenceType enum value
+     * <p>Maps user-friendly recurrence labels to their corresponding enum values:
+     * <ul>
+     *   <li>"Daily" → {@link RecurringEvent.RecurrenceType#DAILY}</li>
+     *   <li>"Weekly" → {@link RecurringEvent.RecurrenceType#WEEKLY}</li>
+     *   <li>"Monthly" → {@link RecurringEvent.RecurrenceType#MONTHLY}</li>
+     *   <li>Any other value → {@link RecurringEvent.RecurrenceType#NONE}</li>
+     * </ul>
+     * </p>
+     *
+     * @param recurrenceString The string representation of the recurrence type (e.g., "Daily",
+     *                         "Weekly", "Monthly", "No recurrence")
+     * @return The corresponding {@link RecurringEvent.RecurrenceType} enum value. Returns
+     *         {@link RecurringEvent.RecurrenceType#NONE} if the string does not match any
+     *         predefined recurrence type
      */
     private static RecurringEvent.RecurrenceType parseRecurrenceType(String recurrenceString) {
         return switch (recurrenceString) {
@@ -330,4 +421,3 @@ public final class EventFormDialog {
         };
     }
 }
-

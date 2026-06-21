@@ -9,45 +9,68 @@ import java.util.*;
  * ReminderThread is a background daemon thread that continuously monitors scheduled events
  * and displays reminder notifications at the appropriate time before each event.
  *
- * This thread runs independently and periodically checks if any events need reminders.
- * When a reminder is due, it displays a popup dialog to alert the user. The thread
- * uses a set to track notified events to ensure each event triggers exactly one reminder.
+ * <p><strong>Threading Model:</strong> This thread runs independently as a daemon thread
+ * (automatically stops when the application exits) and periodically checks if any events need
+ * reminders. When a reminder is due, it displays a popup dialog to alert the user.</p>
  *
- * Key features:
- * - Runs as a daemon thread (automatically stops when the application exits)
- * - Checks for reminders every 30 seconds
- * - Thread-safe reminder notifications using SwingUtilities.invokeLater()
- * - Prevents duplicate notifications for the same event
+ * <p><strong>Key Features:</strong></p>
+ * <ul>
+ *   <li>Runs as a daemon thread (automatically terminates when the main application exits)</li>
+ *   <li>Checks for due reminders every 30 seconds ({@link #CHECK_INTERVAL_MS})</li>
+ *   <li>Thread-safe reminder notifications using {@link SwingUtilities#invokeLater(Runnable)}</li>
+ *   <li>Prevents duplicate notifications for the same event using a tracking set</li>
+ *   <li>Graceful shutdown support via {@link #stop_running()} method</li>
+ *   <li>Handles thread interruptions and sleep exceptions appropriately</li>
+ * </ul>
  *
- * @author Gustavo Henrique Nogueira de Andrade Filho 
+ * <p><strong>Reminder Timing:</strong> A reminder is displayed when the current time falls within
+ * the reminder window, defined as from (event time - reminder minutes) to (event time + 1 minute)
+ * to account for timing variations and race conditions.</p>
+ *
+ * <p><strong>Thread Safety:</strong> Uses {@link SwingUtilities#invokeLater(Runnable)} to ensure
+ * all UI operations occur on the Swing Event Dispatch Thread (EDT), which is required for thread-safe
+ * Swing component operations.</p>
+ *
+ * @author Gustavo Henrique Nogueira de Andrade Filho
  * @author Pedro Rocha Dantas
  * @author Leonardo Oliveira Eid
- * @version 1.0
+ * @version 2.0
+ * @see EventController
+ * @see planner.model.Event
  */
 public class ReminderThread extends Thread {
 
-    // Check interval: 30 seconds (30,000 milliseconds)
-    // Controls how frequently the thread checks for due reminders
+    /**
+     * The interval in milliseconds between consecutive reminder checks.
+     * Set to 30 seconds (30,000 ms) to provide regular checking without excessive CPU usage.
+     */
     private static final int CHECK_INTERVAL_MS = 30_000;
 
-    // Reference to the event controller for accessing all scheduled events
+    /** Reference to the {@link EventController} for accessing all scheduled events */
     private final EventController controller;
 
-    // Tracks which events have already been notified to prevent duplicate reminders
-    // Uses event title + date/time as a unique key
+    /**
+     * Tracks which events have already been notified to prevent duplicate reminders.
+     * Uses a unique key combining event title and date/time to identify events.
+     */
     private final Set<String> alreadyNotified = new HashSet<>();
 
-    // Flag to control the thread's execution loop
-    // Using volatile keyword ensures all threads see the most current value
+    /**
+     * Flag to control the thread's execution loop.
+     * Marked as {@code volatile} to ensure all threads see the most current value
+     * when checking this flag.
+     */
     private volatile boolean isRunning = true;
 
     /**
      * Constructs a ReminderThread with a reference to the EventController.
      *
-     * The thread is automatically configured as a daemon thread so it will
-     * automatically terminate when the main application exits.
+     * <p>Initializes the thread with the provided controller instance and automatically
+     * configures the thread as a daemon thread so it will automatically terminate when
+     * the main application exits.</p>
      *
-     * @param controller The EventController instance used to retrieve events
+     * @param controller The {@link EventController} instance used to retrieve and monitor
+     *                   scheduled events
      */
     public ReminderThread(EventController controller) {
         this.controller = controller;
@@ -56,13 +79,22 @@ public class ReminderThread extends Thread {
     }
 
     /**
-     * Main execution method of the thread.
+     * Main execution method of the reminder thread.
      *
-     * This method runs continuously in a loop, checking for due reminders at regular
-     * intervals (every 30 seconds). The loop terminates when the isRunning flag is set
-     * to false by calling the stop() method.
+     * <p>This method runs in a continuous loop, checking for due reminders at regular intervals
+     * (every {@link #CHECK_INTERVAL_MS} milliseconds). The loop terminates when the
+     * {@link #isRunning} flag is set to {@code false} by calling the {@link #stop_running()}
+     * method.</p>
      *
-     * The thread gracefully handles interruptions and will exit the loop if interrupted.
+     * <p><strong>Execution Flow:</strong></p>
+     * <ol>
+     *   <li>Call {@link #checkReminders()} to check for due reminders</li>
+     *   <li>Sleep for 30 seconds</li>
+     *   <li>Repeat until {@link #isRunning} becomes {@code false}</li>
+     * </ol>
+     *
+     * <p>The thread gracefully handles {@link InterruptedException} and will exit the loop if
+     * interrupted, allowing for clean shutdown.</p>
      */
     @Override
     public void run() {
@@ -81,17 +113,27 @@ public class ReminderThread extends Thread {
     }
 
     /**
-     * Checks all events and triggers reminders for those that are due.
+     * Checks all scheduled events and triggers reminders for those that are due.
      *
-     * This method:
-     * 1. Gets the current date and time
-     * 2. Iterates through all events in the controller
-     * 3. Calculates when each event's reminder should trigger
-     * 4. Checks if the current time is within the reminder window
-     * 5. Displays a popup notification if reminder is due and hasn't been shown yet
+     * <p><strong>Execution Process:</strong></p>
+     * <ol>
+     *   <li>Gets the current date and time via {@link LocalDateTime#now()}</li>
+     *   <li>Iterates through all events in the controller via
+     *       {@link EventController#getAllEvents()}</li>
+     *   <li>For each event, calculates when its reminder should trigger by subtracting
+     *       {@link Event#getReminderMinutesBefore()} from the event time</li>
+     *   <li>Checks if the current time falls within the reminder window</li>
+     *   <li>If the reminder is due and hasn't been shown yet, displays a popup notification
+     *       via {@link #displayReminderPopup(Event)}</li>
+     * </ol>
      *
-     * The reminder window is defined as: from (event time - reminder minutes) to
-     * (event time + 1 minute) to account for timing variations.
+     * <p><strong>Reminder Window:</strong> The reminder window is defined as from
+     * (event time - reminder minutes) to (event time + 1 minute). The 1-minute tolerance
+     * accounts for timing variations and race conditions.</p>
+     *
+     * <p><strong>Duplicate Prevention:</strong> Uses the {@link #alreadyNotified} set to track
+     * which events have already triggered their reminders, ensuring each event produces exactly
+     * one notification.</p>
      */
     private void checkReminders() {
         // Get the current date and time
@@ -130,11 +172,20 @@ public class ReminderThread extends Thread {
     /**
      * Displays a popup notification window for an event reminder.
      *
-     * The popup shows the event's title, scheduled date/time, and location
-     * in a formatted HTML message. The user must acknowledge the reminder
-     * by clicking the OK button to close the notification.
+     * <p>Creates and displays an {@link JOptionPane#INFORMATION_MESSAGE} dialog showing the
+     * event's details in a formatted HTML message. The popup includes the event title, scheduled
+     * date/time, and location. The user must acknowledge the reminder by clicking the OK button
+     * to close the notification.</p>
      *
-     * @param event The Event object that the reminder is for
+     * <p><strong>Message Format:</strong> The reminder popup displays:</p>
+     * <ul>
+     *   <li>A clock icon (⏰) with "Reminder!" heading</li>
+     *   <li>Event title</li>
+     *   <li>Formatted date and time ({@link Event#getFormattedDateTime()})</li>
+     *   <li>Location</li>
+     * </ul>
+     *
+     * @param event The {@link Event} object that the reminder is for. Must not be {@code null}
      */
     private void displayReminderPopup(Event event) {
         // Create a formatted HTML message with event details
@@ -154,12 +205,13 @@ public class ReminderThread extends Thread {
     /**
      * Stops the reminder thread gracefully.
      *
-     * This method sets the isRunning flag to false, which causes the main loop
-     * in the run() method to terminate. It also interrupts the thread to wake it
-     * from any sleep() call if currently sleeping.
+     * <p>Sets the {@link #isRunning} flag to {@code false}, which causes the main loop in the
+     * {@link #run()} method to terminate. Also calls {@link Thread#interrupt()} to wake the
+     * thread from any {@link Thread#sleep(long)} call if currently sleeping, allowing for
+     * immediate shutdown.</p>
      *
-     * After calling this method, the thread will exit cleanly and allow the
-     * application to shut down.
+     * <p>After calling this method, the thread will exit cleanly and the application can
+     * shut down without hanging threads.</p>
      */
     public void stop_running() {
         // Signal the thread to stop running
