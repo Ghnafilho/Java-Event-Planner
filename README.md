@@ -98,6 +98,24 @@ java -cp out planner.Main
 ```
 ---
 
+## Testing
+
+The project was validated using JUnit 5 unit tests covering the main components of the application. All tests were executed successfully.
+
+| Test Class | Test Case | Purpose | Result |
+|------------|-----------|----------|--------|
+| `EventControllerTest` | `testCreateEvent_InvalidTitle_ShouldThrowException` | Verifies that creating an event with an empty title throws `InvalidEventException`. | ✅ Passed |
+| `EventControllerTest` | `testCreateEvent_ValidData_ShouldAddToList` | Verifies successful event creation and insertion into the controller's event list. | ✅ Passed |
+| `EventControllerTest` | `testCreateRecurringEvent_Success` | Verifies correct creation of recurring events, recurrence type assignment, and automatic series ID generation. | ✅ Passed |
+| `DataStorageTest` | `testRoundTrip_RecurringEvent` | Verifies successful serialization and deserialization of recurring events while preserving all important attributes. | ✅ Passed |
+| `RecurringEventTest` | `testCalculateNextOccurrence_Daily` | Verifies that daily recurring events correctly calculate the next occurrence. | ✅ Passed |
+| `RecurringEventTest` | `testCalculateNextOccurrence_Weekly` | Verifies that weekly recurring events correctly calculate the next occurrence. | ✅ Passed |
+| `RecurringEventTest` | `testCalculateNextOccurrence_Monthly` | Verifies that monthly recurring events correctly calculate the next occurrence. | ✅ Passed |
+
+**Summary:** A total of **7 unit tests** were executed successfully, validating event creation, input validation, recurring event behavior, data persistence, and recurrence date calculations.
+
+---
+
 ## Data Persistence
 
 Events are automatically saved to the `events_data.txt` file located in the project's root directory.
