@@ -64,7 +64,7 @@ Academic project for the **Object-Oriented Programming** course.
 
 ### Prerequisite
 
-* Java 17 or later installed
+* Java 19 or later installed
 
 ### Windows
 
@@ -74,6 +74,11 @@ Run:
 
 ```cmd
 run.bat
+```
+
+Run tests:
+```cmd
+run_test.bat
 ```
 
 Or simply double-click the file in Windows Explorer.
